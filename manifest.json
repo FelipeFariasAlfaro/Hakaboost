@@ -1,8 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Test Hunt IA",
-  "version": "0.1.9",
-  "description": "Complemento Hakalab para optimizar el trabajo en Jira.",
+  "name": "HakaBoot",
+  "version": "0.2.5",
+  "description": "Hakalab plugin to optimize work in Jira.",
+  "icons": {
+    "16": "img/32.png",
+    "48": "img/64.png",
+    "128": "img/128.png"
+  },
   "permissions": [
     "storage",
     "sidePanel",
@@ -26,8 +31,13 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "Abrir TestHunt",
-    "default_popup": "nojira.html"
+    "default_title": "Open Hakaboot",
+    "default_popup": "nojira.html",
+    "default_icon": {
+      "16": "img/32.png",
+      "48": "img/64.png",
+      "128": "img/128.png"
+    }
   },
   "content_scripts": [
     {
