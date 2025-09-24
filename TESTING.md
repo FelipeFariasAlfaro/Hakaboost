@@ -17,7 +17,7 @@ This guide contains everything needed to evaluate the extension end‑to‑end.
 1. Download or clone the repository.
 2. Open Chrome → `chrome://extensions` → enable **Developer mode**.
 3. Click **Load unpacked** → select the repository folder.
-4. The extension “HakaBoot” should appear.
+4. The extension “Hajaboost” should appear.
 
 ## 3) Configure Credentials (Side Panel → Settings)
 - **AI**
@@ -61,4 +61,4 @@ This guide contains everything needed to evaluate the extension end‑to‑end.
 
 ---
 
-**That’s it!** With the steps above, judges can install, configure, and validate the core value of HakaBoot.
+**That’s it!** With the steps above, judges can install, configure, and validate the core value of Hajaboost.

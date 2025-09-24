@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (firstTime + '' === 'true') {
       const result = await Swal.fire({
         title: 'Welcome',
-        html: 'To get started with TestHunt, check the settings section, where you can connect to OpenAI/Gemini, Jira, and XRAY (optional). You can use the "?" buttons to get additional information.',
+        html: 'To get started with Hakaboost, check the settings section, where you can connect to OpenAI/Gemini, Jira, and XRAY (optional). You can use the "?" buttons to get additional information.',
         icon: 'info',
         confirmButtonText: 'OK',
         width: "70%"
@@ -635,7 +635,7 @@ function renderIssueData(data) {
 
     Swal.fire({
       title: 'Error in the Matrix',
-      html: 'To use TestHunt correctly the browser must be in a valid task',
+      html: 'To use Hakaboost correctly the browser must be in a valid task',
       icon: 'info',
       confirmButtonText: 'OK',
       width: "80%"
@@ -650,7 +650,7 @@ function renderIssueData(data) {
   if (!data?.status || !data?.summary) {
     Swal.fire({
       title: 'Error in the Matrix',
-      html: 'To use TestHunt correctly the browser must be in a valid task.',
+      html: 'To use Hakaboost correctly the browser must be in a valid task.',
       icon: 'info',
       confirmButtonText: 'OK',
       width: "80%"
@@ -871,7 +871,7 @@ async function dudasIssues() {
 async function cofeeMenssage() {
   Swal.fire({
     title: 'Invitale un café al dev.',
-    html: '¿TestHunt te es útil? invitale un café al dev para aliviar el insomnio.',
+    html: '¿Hakaboost te es útil? invitale un café al dev para aliviar el insomnio.',
     imageUrl: '/img/cafe.png',
     imageWidth: 128,
     imageHeight: 128,
@@ -944,7 +944,7 @@ async function validateRegister() {
     if (respAPI) {
       const result = await Swal.fire({
         title: 'All good',
-        html: 'Complete registration. <br>To finish you must close and reopen HakaBoots (we will try to do it automatically). Si no ocurre, por favor cierralo.',
+        html: 'Complete registration. <br>To finish you must close and reopen Hajaboosts (we will try to do it automatically). Si no ocurre, por favor cierralo.',
         icon: 'success',
         confirmButtonText: 'Excellent!',
         width: '70%'
@@ -989,7 +989,7 @@ async function Api_conection(name, mail, business) {
     Email: mail,
     Cargo: 'No Informa',
     Empresa: business,
-    Producto: 'TestHunt'
+    Producto: 'Hakaboost'
   };
   const options = {
     method: 'POST',

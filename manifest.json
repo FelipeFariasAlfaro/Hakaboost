@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "HakaBoot",
+  "name": "HakaBoost",
   "version": "0.2.5",
   "description": "Hakalab plugin to optimize work in Jira.",
   "icons": {
@@ -31,7 +31,7 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "Open Hakaboot",
+    "default_title": "Open Hakaboost",
     "default_popup": "nojira.html",
     "default_icon": {
       "16": "img/32.png",
@@ -57,7 +57,7 @@
         "default": "Ctrl+Shift+Y",
         "mac": "Command+Shift+Y"
       },
-      "description": "Mostrar/ocultar TestHunt"
+      "description": "Mostrar/ocultar Hakaboost"
     }
   }
 }

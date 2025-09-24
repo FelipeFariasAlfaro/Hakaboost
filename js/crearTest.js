@@ -293,7 +293,7 @@ async function jiraCreateTestIssue({
         scenario.body.split(/\r?\n/).slice(1).join('\n');
 
     descriptionText = descriptionText.replaceAll('`', '');
-    descriptionText = descriptionText + '\n\n Created by TestHunt - Hakalab.com'
+    descriptionText = descriptionText + '\n\n Created by Hakaboost - Hakalab.com'
 
     const { issue_type } = await chrome.storage.sync.get(['issue_type']);
     let tipoIssue = issue_type || 'Test';

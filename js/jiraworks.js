@@ -56,7 +56,7 @@ export async function chachDefaultIssue()
         elsCred.inpissuetype.disabled = false;
         Swal.fire({
             title: 'Atención!',
-            html: 'This allows you to change the type of task (Issue) that TestHunt creates in Jira. <br>'+
+            html: 'This allows you to change the type of task (Issue) that Hakaboost creates in Jira. <br>'+
                 '<strong>Just change this value to a valid Jira task name (literal).</strong>'+
                 '<br>If you specify a non-existent task type, an error will occur..'+
                 '<br>To save the change press the "Save Jira" button',

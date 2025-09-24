@@ -1,6 +1,6 @@
-# HakaBoot — Chrome Extension for Jira (MV3)
+# HakaBoost — Chrome Extension for Jira (MV3)
 
-**HakaBoot** optimizes Jira issue descriptions and accelerates QA workflows using AI (OpenAI, Gemini, or local Chrome AI when available). It also helps create test artifacts and integrates with **Xray Cloud**.
+**HakaBoost** optimizes Jira issue descriptions and accelerates QA workflows using AI (OpenAI, Gemini, or local Chrome AI when available). It also helps create test artifacts and integrates with **Xray Cloud**.
 
 > This repository is open-source under the **MIT License** (see `LICENSE`).
 
@@ -25,7 +25,7 @@
 1. Clone or download this repo.
 2. Open `chrome://extensions` → enable **Developer mode**.
 3. Click **Load unpacked** → select this folder.
-4. You should see **HakaBoot** in your toolbar or extensions list.
+4. You should see **HakaBoost** in your toolbar or extensions list.
 
 ## Configuration (Side Panel → Settings)
 - **AI Provider**
@@ -42,7 +42,7 @@
 
 ## Usage
 1. Open any Jira issue page in your Jira Cloud (e.g., `/browse/PROJ-123`).
-2. Click the **HakaBoot** icon (or press `Ctrl+Shift+Y` / `Cmd+Shift+Y`) to open the side panel.
+2. Click the **Hajaboost** icon (or press `Ctrl+Shift+Y` / `Cmd+Shift+Y`) to open the side panel.
 3. Press **Load Description** to pull the current description.
 4. Press **Improve** to generate a higher‑quality description.
 5. **Replace** to push it back into Jira.
