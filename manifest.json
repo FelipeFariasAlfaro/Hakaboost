@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Test Hunt IA",
+  "version": "0.1.9",
+  "description": "Complemento Hakalab para optimizar el trabajo en Jira.",
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "scripting",
+    "activeTab",
+    "webNavigation",
+    "tabs",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://*.atlassian.net/*",
+    "https://*.jira.com/*",
+    "https://api.openai.com/*",
+    "https://xray.cloud.getxray.app/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Abrir TestHunt",
+    "default_popup": "nojira.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.atlassian.net/*",
+        "https://*.jira.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-sidepanel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Mostrar/ocultar TestHunt"
+    }
+  }
+}

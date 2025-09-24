@@ -1,0 +1,22 @@
+.info-text p {
+    font-size: 11px;
+    margin: 2px 0;  
+    line-height: 1.3;
+  }
+
+.swal-label {
+  display: block;       /* aseguras que respete márgenes */
+  margin-bottom: 10px;  /* espacio con el textarea */
+  margin-top: 10px;     /* espacio desde arriba */
+  font-size: 14px;
+  text-align: left;     /* opcional, alineación */
+}  
+
+label {
+  font-size: 13px;   /* o el tamaño que quieras */
+}
+
+.swal2-backdrop-show {
+  backdrop-filter: blur(6px);
+  background-color: rgba(0,0,0,0.4) !important;
+}
