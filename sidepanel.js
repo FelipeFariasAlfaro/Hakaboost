@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       iaselect.value = "ChromeIA";
     }else{
       await chrome.storage.sync.set({
-        ia_default: 'ChromeIA'
+        ia_default: 'chrome'
       });
     }
 
