@@ -5,6 +5,8 @@ import {
 import { testJiraConect, chachDefaultIssue } from './js/jiraworks.js'
 import { ENDPOINTS } from './js/urls.js'
 import { mask, isMasked, jiraRequest, crearTest } from './js/crearTest.js'
+import { leng, setting_leng } from "./js/lang.js";
+
 
 
 export const els = {
@@ -64,44 +66,87 @@ const elsEsc = {
   mainissue: document.getElementById('mainissue')
 };
 
-const orden1 = `You're a QA expert. You're going to improve a Jira user story..
+const html = {
+  title_main: document.getElementById('title_main'),
+  copilot: document.getElementById('copilot'),
+  configuraciones: document.getElementById('configuraciones'),
+  label_estado: document.getElementById('label_estado'),
+  label_titulo: document.getElementById('label_titulo'),
+  btnloaddesc: document.getElementById('btn-load-desc'),
+  btnimprove: document.getElementById('btn-improve'),
+  btncrearescenarios: document.getElementById('btn-crear-escenarios'),
+  label_descripcion_original: document.getElementById('label_descrip_original'),
+  label_descripcion_mejorada: document.getElementById('label_descrip_mejorada'),
+  btnreemplazardesc: document.getElementById('btn-reemplazar-desc'),
+  labelavisotest: document.getElementById('label_aviso_test'),
+  labelavisolinks: document.getElementById('label_aviso_links'),
+  labelmainissue: document.getElementById('label_mainissue'),
+  crearTestEnJira: document.getElementById('crearTestEnJira'),
+  labelavisodatos: document.getElementById('label_aviso_datos'),
+  btnajustesia: document.getElementById('btn_ajustes_ia'),
+  iaseleccion: document.getElementById('iaseleccion'),
+  sel_modelo_ia: document.getElementById('sel_modelo_ia'),
+  sel_mode_gemini: document.getElementById('sel_mode_gemini'),
+  jira_setting_menu: document.getElementById('jira_setting_menu'),
 
-STRICT EXIT INSTRUCTIONS
-- Respond in english.
-- Do not add explanations, notes or text outside the indicated sections..
-- Do not use Markdown formatting except for ONE single block of code for Gherkin.
-- Do not include invisible characters, emojis, or decoration.
+  label_uso_jira: document.getElementById('label_uso_jira'),
+  label_issuetype: document.getElementById('label_issuetype'),
+  label_typelink: document.getElementById('label_typelink'),
+  label_xray_ajustes: document.getElementById('label_xray_ajustes'),
+  label_desc_xray: document.getElementById('label_desc_xray'),
+  haka_link: document.getElementById('haka_link')
 
-TASKS
-1) Generate clear and precise "Acceptance Criteria" from the description. Just a short numbered list (no ATDD scenarios yet).
-2) From those criteria, create "BDD Scenarios" in standard Gherkin.
-   - Use EXACTLY these keywords (in English, without variations):
-     Feature, Scenario, Given, When, Then, And, But
-   - Strict syntax: Each keyword starts a line and is followed by a colon (:) and a space where applicable (e.g. "Feature: ...", "Scenario: ...").
-   - Do not insert bullets, numbers, or other symbols inside the Gherkin block.
-   - Don't use Outlines or Background Scenarios, just create simple Scenarios
-   - You must create at least one scenario for each of the acceptance criteria (minimum 1)`;
-  
+}
+
+var orden1 = "";
 
 
 /****************  Carga todo lo básico para el complemento *********************/
 document.addEventListener('DOMContentLoaded', async () => {
 
+  //seteo del lenguaje
+  await setting_leng();
+
+  orden1 = leng.PROMPT_ORG;
+  
+
+  await setHTMLLeng(html, leng);
+
   const { isregister } = await chrome.storage.sync.get('isregister');
-  elsCred.openaidata.style = 'display:none';
-  elsCred.geminidata.style = 'display:none';
 
-  if (!isregister || isregister === 'false') {
-    validateRegister();
-    return;
-  } else {
+   elsCred.openaidata.style = 'display:none';
+   elsCred.geminidata.style = 'display:none';
 
+  if (!isregister || isregister === 'false') { //inicia el registro
 
+    Swal.fire({
+      title: 'Selecciona tu idioma / Select your language',
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: 'Español',
+      denyButtonText: 'English',
+      cancelButtonText: 'Cerrar',
+      allowOutsideClick: true,
+      allowEscapeKey: true
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await chrome.storage.sync.set({ lenguaje: 'es' });
+        validateRegister('es');
+      } else if (result.isDenied) {
+        await chrome.storage.sync.set({ lenguaje: 'en' });
+        validateRegister('en');
+      } else {
+        return;
+      }
+  });
+
+  }
+  else {
     const { firstTime } = await chrome.storage.sync.get('firstTime');
-    if (firstTime + '' === 'true') {
+    if (firstTime + '' === 'true') { //esta registrado y es el primer ingreso
       const result = await Swal.fire({
-        title: 'Welcome',
-        html: 'To get started with Hakaboost, check the settings section, where you can connect to OpenAI/Gemini, Jira, and XRAY (optional). You can use the "?" buttons to get additional information.',
+        title: leng.Bienvenido,
+        html: leng.MSG_BIENVENIDA,
         icon: 'info',
         confirmButtonText: 'OK',
         width: "70%"
@@ -154,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       iaselect.value = "ChromeIA";
     }else{
       await chrome.storage.sync.set({
-        ia_default: 'chrome'
+        ia_default: 'openai'
       });
     }
 
@@ -166,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.btnquestion.addEventListener('click', mensajeDeAyuda);
     els.setprompt.addEventListener('click', setPrompt);
     els.saveTokenBtn.addEventListener('click', savedataIA);
-    //els.cofee.addEventListener('click', cofeeMenssage);
+    els.cofee.addEventListener('click', cofeeMenssage);
     els.cleantests.addEventListener('click', cleanTests);
     elsCred.iaselect.addEventListener('change', changeIa);
     elsCred.chkissuetype.addEventListener('change', chachDefaultIssue);
@@ -196,8 +241,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       elsCred.linked.value = linked;
     }
 
-
-
     //Botones Guardar Jira
     elsCred.saveJira.addEventListener('click', async () => {
       const base = elsCred.jiraBase.value.trim();
@@ -208,12 +251,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
       if (!base || !email || !token || !inpissuetype) {
-        Swal.fire('Upss', 'You must complete all Jira data.', 'error');
+        Swal.fire('Upss', leng.MSG_JIRA_ERROR1, 'error');
         return;
       }
 
       if (!isValidEmail(email)) {
-        Swal.fire('Upss', 'You must specify your email in a valid format.', 'error');
+        Swal.fire('Upss', leng.MSG_MAIL_ERROR1, 'error');
         return;
       }
 
@@ -231,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elsCred.clearJira.addEventListener('click', async () => {
       await chrome.storage.sync.remove(['jira_base', 'jira_email', 'jira_token']);
       elsCred.jiraBase.value = elsCred.jiraEmail.value = elsCred.jiraToken.value = '';
-      Swal.fire('Todo bien!', 'Credentials successfully removed.', 'success');
+      Swal.fire(leng.EXITO_SWAL, leng.EXITO_DELETE_CRED, 'success');
     });
 
     //Botones Guardar Xray
@@ -239,7 +282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const cid = elsCred.xrayClientId.value.trim();
       let csec = elsCred.xrayClientSecret.value.trim();
       if (!cid || !csec) {
-        Swal.fire('Upss', 'You must enter Client Id and Secret', 'error');
+        Swal.fire('Upss', leng.MSG_XRAY_ERROR1, 'error');
         await chrome.storage.sync.set({ xray: 'false' });
         return;
       }
@@ -248,17 +291,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       let validateXray = await xrayTestData(cid, csec);
-      
 
-      if(validateXray){
+
+      if (validateXray) {
         await chrome.storage.sync.set({ xray_client_id: cid, xray_client_secret: csec, xray: 'true' });
         elsCred.xrayClientSecret.value = mask(csec);
-        Swal.fire('All good!', 'X-ray Data Stored Correctly', 'success');
-      }else{
-        Swal.fire("Something doesn't add up", "We were unable to authenticate your XRAY data, please review it.", 'error');
+        Swal.fire(leng.EXITO_SWAL, leng.EXITO_XRAY_SAVE, 'success');
+      } else {
+        Swal.fire(leng.MSG_ERROR_SWAL, leng.MSG_XRAY_ERROR2, 'error');
       }
 
-      
+
     });
 
     //Botones Eliminar Xray
@@ -277,21 +320,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     await refreshFromActiveTab();
 
   }
-
-
 });
 
 async function mensajeDeAyuda() {
   Swal.fire({
-    title: 'Information',
-    html: `
-    <p><strong>Improve Description:</strong> Use AI to formulate an improvement option for the description in Jira. </p>
-    <p><strong>Create Tests:</strong> Automatically create tests (issues) based on the current description in Jira. The description must contain 'Scenarios' in gherkin.</p>
-    <p><strong>Update Jira:</strong> Update the description in Jira with the AI-enhanced version. </p>
-
-  `,
+    title: leng.INFORMACION,
+    html: leng.MSG_AYUDA1,
     icon: 'info',
-    confirmButtonText: 'I understand',
+    confirmButtonText: leng.BTN_ENTIENDO,
     width: "80%"
   });
 }
@@ -318,17 +354,15 @@ async function refreshFromActiveTab() {
   }
 }
 
-
-
 // Inyecta content.js si hace falta
 async function ensureContentScript(tabId) {
   const tab = await chrome.tabs.get(tabId);
   if (!tab?.url || !/(atlassian\.net|jira\.com)/.test(new URL(tab.url).hostname)) {
     Swal.fire({
       title: 'Error',
-      html: 'This plugin works only in Jira.',
+      html: leng.MSG_ERROR_ONLYJIRA,
       icon: 'error',
-      confirmButtonText: 'I understand'
+      confirmButtonText: leng.BTN_ENTIENDO
     });
     throw new Error('Tab no es Jira');
   }
@@ -346,17 +380,15 @@ async function ensureContentScript(tabId) {
   await new Promise(r => setTimeout(r, 50));
 }
 
-
 //Lee la descripción de jira
 export async function leerDescripcionDesdeJira() {
-  els.improveStatus.textContent = 'Reading page description...';
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
     Swal.fire({
       title: 'Error',
-      html: 'Unable to read the page description. You must be in a Jira issue..',
+      html: leng.MSG_JIRA_ERROR2,
       icon: 'error',
-      confirmButtonText: 'I understand'
+      confirmButtonText: leng.BTN_ENTIENDO
     });
     return;
   }
@@ -374,9 +406,9 @@ export async function leerDescripcionDesdeJira() {
   } catch (e1) {
     Swal.fire({
       title: 'Error',
-      html: 'Unable to read the page description. You must be in a Jira issue.',
+      html: leng.MSG_JIRA_ERROR2,
       icon: 'error',
-      confirmButtonText: 'I understand'
+      confirmButtonText: leng.BTN_ENTIENDO
     });
   }
 }
@@ -386,8 +418,8 @@ export async function leerDescripcionDesdeJira() {
 async function reemplazarDescripcion() {
 
   Swal.fire({
-    title: 'Checking...',
-    text: 'We are checking that everything is working correctly, please wait....',
+    title: leng.COMPROBANDO,
+    text: leng.MSG_ESPERA,
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
@@ -404,10 +436,10 @@ async function reemplazarDescripcion() {
   if (!urlT.includes(issueT)) {
     Swal.close();
     Swal.fire({
-      title: 'Error in the Matrix',
-      text: 'It looks like you created this improved description in another issue. You cant update the current page. Well clean everything up.',
+      title: leng.MSG_ERROR_SWAL2,
+      text: leng.MSG_JIRA_ERROR3,
       icon: 'error',
-      confirmButtonText: 'I understand'
+      confirmButtonText: leng.BTN_ENTIENDO
     });
     els.descImproved.value = '';
     els.reemplazarDesc.disabled = true;
@@ -415,23 +447,27 @@ async function reemplazarDescripcion() {
     return;
   }
 
-  // 1) Validar datos mínimos
   const improved = (els.descImproved?.value || '').trim();
   if (!improved) {
     Swal.close();
     Swal.fire({
-      title: 'not so fast',
-      text: 'You must first generate an improved description from the "Improve Desc." button.',
+      title: leng.MSG_ERROR_SWAL3,
+      text: leng.MSG_JIRA_ERROR4,
       icon: 'error',
       confirmButtonText: 'OK'
     });
-    els.improveStatus.textContent = 'There is no enhanced description to submit.';
     return;
   }
 
   const storyKey = (els.issue?.value || '').trim();
   if (!/^[A-Z][A-Z0-9]+-\d+$/.test(storyKey)) {
-    els.improveStatus.textContent = 'The issue key was not detected.';
+    Swal.close();
+    Swal.fire({
+      title: leng.MSG_ERROR_SWAL,
+      text: leng.MSG_JIRA_ERROR5,
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
     return;
   }
 
@@ -454,8 +490,8 @@ async function reemplazarDescripcion() {
   if (!jira_base || !jira_email || !jira_token) {
     Swal.close();
     Swal.fire({
-      title: 'Jira credentials are missing',
-      text: 'You must first configure your Jira credentials in the configuration panel.',
+      title: leng.MSG_JIRA_NOCRED,
+      text: leng.MSG_JIRA_NOCRED2,
       icon: 'error',
       confirmButtonText: 'OK'
     });
@@ -465,8 +501,8 @@ async function reemplazarDescripcion() {
   try {
     Swal.close();
     Swal.fire({
-      title: 'In progress...',
-      text: "Please wait, we're updating the description in Jira...",
+      title: leng.EN_CURSO,
+      text: leng.MSG_JIRA_ENCURSO,
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => {
@@ -474,12 +510,8 @@ async function reemplazarDescripcion() {
       }
     });
 
-    els.improveStatus.textContent = 'Updating description in Jira...';
-
-    // 3) Convertir el texto a ADF
     const adf = toAdfTextCompl(improved);
 
-    // 4) PUT
     await jiraRequest({
       jira_base, jira_email, jira_token,
       path: `/rest/api/3/issue/${encodeURIComponent(storyKey)}`,
@@ -488,19 +520,17 @@ async function reemplazarDescripcion() {
     });
 
     Swal.fire({
-      title: 'All good!',
-      html: 'The description in Jira has been updated. <strong>To see the changes you must refresh the page.</strong>',
+      title: leng.EXITO_SWAL,
+      html: leng.MSG_JIRA_EXITO,
       icon: 'success',
       confirmButtonText: 'OK'
     });
 
-    // 5) (Opcional) refrescar lo que muestra el panel desde la pestaña activa
-    // para ver el cambio reflejado
   } catch (e) {
     console.error(e);
     Swal.fire({
-      title: 'Houston, we have a problem.',
-      text: "The description in Jira hasn't been updated. Are your credentials correct?",
+      title: leng.MSG_ERROR_SWAL,
+      text: leng.MSG_JIRA_ERRORCRED,
       icon: 'error',
       confirmButtonText: 'OK'
     });
@@ -509,25 +539,20 @@ async function reemplazarDescripcion() {
 
 async function setPrompt() {
   var { promptbase } = await chrome.storage.sync.get(['promptbase']);
-  if(promptbase.trim().toLowerCase() === orden1.trim().toLowerCase())
-  {
+  if (promptbase.trim().toLowerCase() === orden1.trim().toLowerCase()) {
     promptbase = "";
   }
 
   const { value: text, isConfirmed, isDenied } = await Swal.fire({
-    title: "Prompt configuration",
-    html: `
-      <p style="margin: 10px 0 15px 0; font-size:13px;">
-        Here you can add a custom Prompt, <strong>if you do</strong> This will be used instead of our original logic. Similarly, you can return to the original prompt at any time using the button. "Load Original"
-      </p>
-    `,
+    title: leng.PROMP_TITULO,
+    html: leng.PROMP_EXPLI,
     input: "textarea",
     inputValue: promptbase || "",
     width: "80%",
     showCancelButton: true,
-    confirmButtonText: "Save Changes",
-    denyButtonText: "Load Original",
-    cancelButtonText: "Cancel",
+    confirmButtonText: leng.BTN_GRD_CAMBIO,
+    denyButtonText: leng.BTN_CRG_ORIGINAL,
+    cancelButtonText: leng.BTN_CANCELAR,
     showDenyButton: true
   });
 
@@ -536,14 +561,14 @@ async function setPrompt() {
     await chrome.storage.sync.set({ promptbase: text });
     Swal.fire({
       icon: "success",
-      title: "Prompt updated",
-      text: "The new prompt has been saved successfully. If it doesn't work, try returning to the original prompt."
+      title: leng.PROMP_ACTUALIZADO,
+      text: leng.PROMP_MSG_EXITO
     });
   } else if (isConfirmed && text.length <= 10) {
     Swal.fire({
       icon: "error",
-      title: "Skynet Activated!",
-      text: "You must store minimally valid text as a prompt. We won't store this prompt to avoid upsetting the AI."
+      title: leng.MSG_ERROR_SWAL,
+      text: leng.PROMP_MSG_ERROR
     });
   }
   else if (isDenied) {
@@ -552,12 +577,11 @@ async function setPrompt() {
     await chrome.storage.sync.set({ promptbase: promptOriginal });
     Swal.fire({
       icon: "info",
-      title: "Prompt restored",
-      text: "The original prompt has been loaded."
+      title: leng.EXITO_SWAL,
+      text: leng.PROMP_MSG_REST
     });
   }
 }
-
 
 async function changeIa() {
   var seleccion = elsCred.iaselect.value;
@@ -573,20 +597,18 @@ async function changeIa() {
   }
 }
 
-
 async function improveDescriptionIssue() {
 
   const { ia_default = '' } = await chrome.storage.sync.get('ia_default');
   if (ia_default === 'gemini') {
     await improveDescriptionGemini(els);
   }
-  else if (ia_default === 'openia'){
+  else if (ia_default === 'openai') {
+    console.log("Modelo OpenAI");
     await improveDescriptionOpenAI(els);
   }else if(ia_default === 'chrome'){
     await improveDescriptionChrome(els);
   }
-
-
 }
 
 /**********************************************/
@@ -594,11 +616,10 @@ async function improveDescriptionIssue() {
 /**********************************************/
 
 //Reintentos para leer los datos de la issue en jira
-// El "delay" es en milisegundos.
 async function retry(fn, { tries, delay } = {}) {
   Swal.fire({
-    title: 'Starting machines!',
-    text: "We're trying to read data from Jira. Please wait.",
+    title: leng.COMPROBANDO,
+    text: leng.MSG_JIRA_LEYENDO,
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
@@ -610,11 +631,10 @@ async function retry(fn, { tries, delay } = {}) {
     try {
       const res = await fn(); // si vino vacío, seguimos intentando 
       if (!res || (!res.key && !res.summary && !res.status)) {
-        lastErr = new Error('Incomplete response');
+        lastErr = new Error('Respuesta incompleta');
         Swal.close();
       } else {
         return res;
-        Swal.close();
       }
     } catch (e) {
       lastErr = e;
@@ -625,7 +645,6 @@ async function retry(fn, { tries, delay } = {}) {
   } throw lastErr || new Error('retry agotado');
 }
 
-
 //Renderiza (o setea) los valores del issue en los imputs de jira
 function renderIssueData(data) {
   if (!data) {
@@ -634,8 +653,8 @@ function renderIssueData(data) {
     els.status.value = '–';
 
     Swal.fire({
-      title: 'Error in the Matrix',
-      html: 'To use Hakaboost correctly the browser must be in a valid task',
+      title: leng.MSG_ERROR_SWAL2,
+      html: leng.MSG_JIRA_ONLY,
       icon: 'info',
       confirmButtonText: 'OK',
       width: "80%"
@@ -649,14 +668,13 @@ function renderIssueData(data) {
 
   if (!data?.status || !data?.summary) {
     Swal.fire({
-      title: 'Error in the Matrix',
-      html: 'To use Hakaboost correctly the browser must be in a valid task.',
+      title: leng.MSG_ERROR_SWAL2,
+      html: leng.MSG_JIRA_ONLY,
       icon: 'info',
       confirmButtonText: 'OK',
       width: "80%"
     });
   }
-
 }
 
 //Normaliza el texto que se actualizará en la HU
@@ -847,10 +865,8 @@ function downloadFeatureFromTextarea(filename) {
 
 async function dudaslinkeds() {
   Swal.fire({
-    title: 'Important',
-    html: 'To link the issues as <strong>Test (tests, is tested by)</strong> (to the main task) You must have this type of link available in your project,' +
-      ' Plugins like XRAY create this link by default. <br>If this type of link fails, we will automatically link' +
-      ' the tests created as <strong>Relates</strong>.',
+    title: leng.INFORMACION,
+    html: leng.MSG_JIRA_INFO_LINK,
     icon: 'info',
     confirmButtonText: 'OK',
     width: "80%"
@@ -859,9 +875,8 @@ async function dudaslinkeds() {
 
 async function dudasIssues() {
   Swal.fire({
-    title: 'Important',
-    html: 'By default we will try to create the issues for the test scenarios as issues of type <strong>Test</strong>. <br> ' +
-      '<strong>If your project does not have this type of issue, please specify another one</strong>. In case of error, we will create the scenarios as a Task (issue Task).',
+    title: leng.INFORMACION,
+    html: leng.MSG_JIRA_INFO_CREATE,
     icon: 'info',
     confirmButtonText: 'OK',
     width: "80%"
@@ -870,38 +885,50 @@ async function dudasIssues() {
 
 async function cofeeMenssage() {
   Swal.fire({
-    title: 'Invitale un café al dev.',
-    html: '¿Hakaboost te es útil? invitale un café al dev para aliviar el insomnio.',
+    title: leng.COFFEE_TITULO + ' ☕',
+    html: leng.COFFEE_MSG,
     imageUrl: '/img/cafe.png',
     imageWidth: 128,
     imageHeight: 128,
-    imageAlt: 'Matrix icon',
+    imageAlt: 'Café icon',
+    showCancelButton: true,
+    showConfirmButton: false,                 // activa un segundo botón
     confirmButtonText: 'OK',
+    cancelButtonText: leng.COFFEE_BTN,    // texto del botón extra
     width: "80%"
+  }).then((result) => {
+    if (result.dismiss === Swal.DismissReason.cancel) {
+      // abrir en nueva pestaña
+      window.open(ENDPOINTS.COFFE, '_blank');
+    }
   });
 
 }
 
 async function validateRegister() {
+
+  //seteo del lenguaje
+  await setting_leng();
+
   const result = await Swal.fire({
-    title: 'Welcome',
+    title: leng.Bienvenido,
     html: `
       <div class="container-fluid">
         <div class="row">
           <div class="col-10 offset-1">
-            <p>To continue, we need some data. <br>
-            This is just to get to know our users — no spam, we promise. 💙</p>
+            <p>${leng.REGISTER_1} <br>
+            ${leng.REGISTER_2} 💙</p>
           </div>
         </div>
         <div class="row">
           <div class="col-10 offset-1">
-            <input id="swal-nombre" class="form-control mt-2" placeholder="Nombre">
+            <input id="swal-nombre" class="form-control mt-2" placeholder="${leng.REGISTER_3}">
           </div>
           <div class="col-10 offset-1">
             <input id="swal-email" type="email" class="form-control mt-2" placeholder="Email">
           </div>
           <div class="col-10 offset-1">
-            <input id="swal-empresa" class="form-control mt-2" placeholder="Empresa">
+            <input id="swal-empresa" class="form-control mt-2" placeholder="${leng.REGISTER_4}">
           </div>
         </div>
       </div>  
@@ -909,8 +936,8 @@ async function validateRegister() {
     width: '80%',
     focusConfirm: false,
     showCancelButton: true,
-    confirmButtonText: 'Register',
-    cancelButtonText: 'Cancel',
+    confirmButtonText: leng.REGISTER_5,
+    cancelButtonText: leng.BTN_CANCELAR,
     backdrop: `
     rgba(0,0,0,0.4) 
     left top 
@@ -922,13 +949,13 @@ async function validateRegister() {
       const empresa = document.getElementById('swal-empresa').value.trim();
 
       if (!nombre || !email || !empresa) {
-        Swal.showValidationMessage('All fields are required.');
+        Swal.showValidationMessage(leng.REGISTER_ERROR);
         return false;
       }
 
       const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!regex.test(email)) {
-        Swal.showValidationMessage('You must enter a valid email address.');
+        Swal.showValidationMessage(leng.REGISTER_ERROR2);
         return false;
       }
 
@@ -943,10 +970,10 @@ async function validateRegister() {
 
     if (respAPI) {
       const result = await Swal.fire({
-        title: 'All good',
-        html: 'Complete registration. <br>To finish you must close and reopen Hajaboosts (we will try to do it automatically). Si no ocurre, por favor cierralo.',
+        title: leng.EXITO_SWAL,
+        html: leng.REGISTER_COMPLETE,
         icon: 'success',
-        confirmButtonText: 'Excellent!',
+        confirmButtonText: leng.BTN_ENTIENDO,
         width: '70%'
       });
       if (result.isConfirmed) {
@@ -959,8 +986,8 @@ async function validateRegister() {
 
     } else {
       const result = await Swal.fire({
-        title: 'Error in the Matrix',
-        html: 'We are having trouble connecting to our headquarters., Please try again. (If you have a VPN, it might be a good time to disable it while you log in).',
+        title: leng.MSG_ERROR_SWAL2,
+        html: leng.REGISTER_ERROR_3,
         icon: 'error',
         confirmButtonText: 'OK',
         width: "80%"
@@ -989,7 +1016,7 @@ async function Api_conection(name, mail, business) {
     Email: mail,
     Cargo: 'No Informa',
     Empresa: business,
-    Producto: 'Hakaboost'
+    Producto: 'HakaBoost'
   };
   const options = {
     method: 'POST',
@@ -1046,6 +1073,33 @@ async function xrayTestData(clientId, clientSecret) {
 async function cleanTests() {
 
   document.getElementById('divcreatetests').style = 'display:none';
-  
+
+}
+
+async function setHTMLLeng(html, leng) {
+  html.title_main.innerHTML = leng.HTML_MAIN_TITLE;
+  html.copilot.innerHTML = leng.HTML_MAIN_COPILOTO;
+  html.configuraciones.innerHTML = leng.HTML_MAIN_CONFIGURACIONES;
+  html.label_estado.innerHTML = leng.HTML_LABEL_ESTADO;
+  html.label_titulo.innerHTML = leng.HTML_LABEL_TITULO;
+  html.btnloaddesc.innerHTML = leng.HTML_BTN_LEERDESCRIPCION;
+  html.btnimprove.innerHTML = leng.HTML_BTN_MEJORARDESCRIPCION;
+  html.btncrearescenarios.innerHTML = leng.HTML_BTN_CREARTEST;
+  html.label_descripcion_original.innerHTML = leng.HTML_LABEL_DESCR_ORIGINAL;
+  html.label_descripcion_mejorada.innerHTML = leng.HTML_LABEL_DESCR_MEJORADA;
+  html.btnreemplazardesc.innerHTML = leng.HTML_LABEL_MEJORAR_JIRA;
+  html.labelavisotest.innerHTML = leng.HTML_LABEL_AVISO_TESTACREAR
+  html.labelavisolinks.innerHTML = leng.HTML_LAVEL_AVISO_LINK
+  html.labelmainissue.innerHTML = leng.HTML_LABEL_AVISO_MAIN
+  html.crearTestEnJira.innerHTML = leng.HTML_BTN_CREARJIRA;
+  html.labelavisodatos.innerHTML = leng.HTML_LABEL_AVISODATOS;
+  html.btnajustesia.innerHTML = leng.HTML_LABEL_AJUSTES_IA;
+  html.iaseleccion.innerHTML = leng.HTML_LABEL_IASELECCION;
+  html.sel_modelo_ia.innerHTML = leng.HTML_LABEL_SELECCIONMODELO;
+  html.sel_mode_gemini.innerHTML = leng.HTML_LABEL_SELECCIONMODELOGEM;
+  html.jira_setting_menu.innerHTML = leng.HTML_LABEL_AJUSTESIA;
+  html.label_xray_ajustes.innerHTML = leng.HTML_LABEL_XRAYTITLE;
+  html.label_desc_xray.innerHTML = leng.HMLT_LABEL_XRAY_DESCRIP;
+  html.haka_link.innerHTML = leng.HTML_LABEL_HAKA;
 }
 

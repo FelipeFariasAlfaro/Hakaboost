@@ -108,8 +108,11 @@ async function reconcileSidePanelForTab(tab) {
   const windowId = getWindowIdOfTab(tab);
 
   if (isJiraUrl(tab.url)) {
+    
     await enableSidePanel(tab.id);
     if (windowId != null) clearPendingClose(windowId);
+
+
   } else {
     await enableSidePaneNoJira(tab.id);
     await disableSidePanel(tab.id);
@@ -287,6 +290,3 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
     console.error("onMessage CLOSE_PANEL error:", e);
   }
 });
-
-
-

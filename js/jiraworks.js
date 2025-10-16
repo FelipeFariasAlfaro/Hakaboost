@@ -1,5 +1,7 @@
 import { elsCred } from '../sidepanel.js';
+import { leng, setting_leng } from "./lang.js";
 
+setting_leng();
 
 export async function testJiraConect()
 {
@@ -22,10 +24,10 @@ export async function testJiraConect()
         
         if (!response.ok) {
             Swal.fire({
-                title: 'Error',
-                html: 'We were unable to connect to Jira, please check your data and try again..',
+                title: leng.MSG_ERROR_SWAL2,
+                html: leng.MSG_JIRA_ERROR6,
                 icon: 'error',
-                confirmButtonText: 'I understand'
+                confirmButtonText: leng.BTN_ENTIENDO
             });
             return;
         }
@@ -34,18 +36,18 @@ export async function testJiraConect()
 
         let nombre =  data.displayName;
         Swal.fire({
-            title: 'All good!',
-            html: 'We have successfully verified the use of JIRA API for your account: '+nombre,
+            title: leng.EXITO_SWAL,
+            html: leng.MSG_JIRA_EXITO_CONN+nombre,
             icon: 'success',
             confirmButtonText: 'OK'
         });
         return;
     }catch(e){
         Swal.fire({
-                title: 'Error',
-                html: 'We were unable to connect to Jira, please review your data and try again.',
+                title: leng.MSG_ERROR_SWAL,
+                html: leng.MSG_JIRA_ERROR6,
                 icon: 'error',
-                confirmButtonText: 'Entiendo'
+                confirmButtonText: leng.BTN_ENTIENDO
             });
     }    
 }
@@ -55,13 +57,10 @@ export async function chachDefaultIssue()
     if(elsCred.chkissuetype.checked){
         elsCred.inpissuetype.disabled = false;
         Swal.fire({
-            title: 'Atención!',
-            html: 'This allows you to change the type of task (Issue) that Hakaboost creates in Jira. <br>'+
-                '<strong>Just change this value to a valid Jira task name (literal).</strong>'+
-                '<br>If you specify a non-existent task type, an error will occur..'+
-                '<br>To save the change press the "Save Jira" button',
+            title: leng.INFORMACION,
+            html: leng.MSG_JIRA_CHANGE_TYPE,
             icon: 'warning',
-            confirmButtonText: 'I understand',
+            confirmButtonText: leng.BTN_ENTIENDO,
             width: "80%",
         });
         

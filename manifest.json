@@ -1,19 +1,18 @@
 {
   "manifest_version": 3,
   "name": "HakaBoost",
-  "version": "0.2.5",
-  "description": "Hakalab plugin to optimize work in Jira.",
+  "version": "1.0.1",
+  "description": "Accelerate your testing and quality work in Jira with HakaBoost",
   "icons": {
-    "16": "img/32.png",
-    "48": "img/64.png",
-    "128": "img/128.png"
+    "16": "img/16x16.png",
+    "48": "img/48x48.png",
+    "128": "img/128x128.png"
   },
   "permissions": [
     "storage",
     "sidePanel",
     "scripting",
     "activeTab",
-    "webNavigation",
     "tabs",
     "downloads"
   ],
@@ -31,13 +30,8 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "Open Hakaboost",
-    "default_popup": "nojira.html",
-    "default_icon": {
-      "16": "img/32.png",
-      "48": "img/64.png",
-      "128": "img/128.png"
-    }
+    "default_title": "Open HakaBoost",
+    "default_popup": "nojira.html"
   },
   "content_scripts": [
     {
@@ -57,7 +51,7 @@
         "default": "Ctrl+Shift+Y",
         "mac": "Command+Shift+Y"
       },
-      "description": "Mostrar/ocultar Hakaboost"
+      "description": "Show/Hidden HakaBoost"
     }
   }
 }

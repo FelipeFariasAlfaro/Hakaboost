@@ -1,7 +1,9 @@
 import { leerDescripcionDesdeJira, els, elsCred } from '../sidepanel.js';
 import { ENDPOINTS } from "./urls.js";
 import { mask, isMasked } from './crearTest.js'
+import { leng, setting_leng } from "./lang.js";
 
+setting_leng();
 
 async function getOpenAIModel() {
   const { openai_model } = await chrome.storage.sync.get(['openai_model']);
@@ -11,7 +13,7 @@ async function getOpenAIModel() {
 }
 
 async function getGeminiModel() {
-  const { gemini_model } = await chrome.storage.sync.get(['gemini_model']);
+  const { gemini_model } = await chrome.storage.sync.get('gemini_model');
   return {
     model: gemini_model || 'gemini-2.5-flash'
   };
@@ -36,7 +38,7 @@ export async function improveDescriptionGemini(els) {
   let statusT = els.status.value;
 
   if (issueT.length < 2 || summaryT.length < 2 || statusT.length < 2) {
-    Swal.fire('Upss!', 'You must be on a valid JIRA issue to improve the description.', 'warning');
+    Swal.fire('Upss!', leng.MSG_JIRA_ISSUE_INVALIDA, 'warning');
     return;
   }
 
@@ -45,8 +47,7 @@ export async function improveDescriptionGemini(els) {
   els.improveStatus.textContent = '';
   const original = els.descOriginal.value.trim();
   if (!original) {
-    els.improveStatus.textContent = 'There is no original description to improve.';
-    Swal.fire('Upss!', 'Theres no description in the issue to improve. (Make sure youre not editing the description.)', 'error');
+    Swal.fire('Upss!', leng.MSG_JIRA_ERROR_NO_DESCRIPCION, 'error');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
     document.getElementById('div-desc-mejorada').style = "display:none";
@@ -55,8 +56,7 @@ export async function improveDescriptionGemini(els) {
 
   const { gemini_token = '' } = await chrome.storage.sync.get('gemini_token');
   if (!gemini_token) {
-    Swal.fire('Upss!', 'You must enter the Google (Gemini) token in the configuration panel', 'warning');
-    els.improveStatus.textContent = 'Falta token de Google. Guárdalo primero.';
+    Swal.fire('Upss!', leng.MSG_IA_ERROR1, 'warning');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
     document.getElementById('div-desc-mejorada').style = "display:none";
@@ -64,8 +64,8 @@ export async function improveDescriptionGemini(els) {
   }
 
   Swal.fire({
-    title: 'Improving description with AI (Gemini).',
-    text: 'Please wait, depending on the AI ​​model used, this may take a while..',
+    title: leng.MSG_IA_MEJORA,
+    text: leng.MSG_IA_ESPERA,
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
@@ -73,27 +73,24 @@ export async function improveDescriptionGemini(els) {
     }
   });
 
-  els.improveStatus.textContent = 'Improving description...';
   els.btnImprove.disabled = true;
 
   // modelo y prompt base
-  const { google_model } = await getGeminiModel(); // ver helper más abajo
-  const { promptbase } = await chrome.storage.sync.get(['promptbase']);
-
+  const { model } = await getGeminiModel();
   try {
     // Endpoint Gemini: generateContent
-    const modelo = google_model || 'gemini-1.5-flash';
-    const apiBase = ENDPOINTS.GEMINI + `${encodeURIComponent(modelo)}:generateContent?key=${encodeURIComponent(gemini_token)}`;
-    console.log("url gemini:", apiBase);
-    const { promptbase } = await chrome.storage.sync.get(['promptbase']);
+    const modelo = model || 'gemini-1.5-flash';
+    const apiBase = ENDPOINTS.GEMINI + `${encodeURIComponent(modelo)}:generateContent`;
+    //const apiBase = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`;
+
+    const { promptbase } = await chrome.storage.sync.get('promptbase');
     const hardLangHint = promptbase;
 
-    // Convertimos tu estructura de mensajes a la que espera Gemini
     const body = {
       contents: [
         {
           role: "user",
-          parts: [{ text: original + hardLangHint }]
+          parts: [{ text: original + hardLangHint }]   // solo el texto de la descripción
         }
       ],
       systemInstruction: promptbase
@@ -106,7 +103,10 @@ export async function improveDescriptionGemini(els) {
 
     const resp = await fetch(apiBase, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': gemini_token,
+      },
       body: JSON.stringify(body)
     });
 
@@ -116,13 +116,13 @@ export async function improveDescriptionGemini(els) {
       const errText = await safeText(resp);
       // 🔎 Diferenciar según código de estado
       if (resp.status === 503) {
-        Swal.fire('Gemini', 'The model used in Gemini is overloaded. Please try again later.', 'error');
+        Swal.fire('Gemini', leng.MSG_IA_GEMINI_ERROR1, 'error');
         return;
       } else if (resp.status === 429) {
-        Swal.fire('Gemini', 'You have exceeded the request limit (rate limit). Please wait a moment and try again.', 'error');
+        Swal.fire('Gemini', leng.MSG_IA_GEMINI_ERROR2, 'error');
         return;
       } else {
-        Swal.fire('Gemini', 'Theres a problem using Gemini. Please try again later.: ' + errText, 'error');
+        Swal.fire('Gemini', leng.MSG_IA_GEMINI_ERROR3 + errText, 'error');
         return;
       }
     }
@@ -131,21 +131,19 @@ export async function improveDescriptionGemini(els) {
     // Gemini responde en candidates[0].content.parts[].text
     const parts = data?.candidates?.[0]?.content?.parts || [];
     const improved = parts.map(p => p.text || '').join('').trim();
-
-    els.descImproved.value = improved || '(no content)';
-    els.improveStatus.textContent = improved ? 'Improved description ready.' : 'Improved text did not arrive.';
+    els.descImproved.value = improved || '(?)';
     els.divimprove.style = 'display:block';
     document.getElementById('robot-durmiento').style = 'display:none';
+    document.getElementById("divcreatetests").style = 'display:none';
     Swal.close();
-    Swal.fire('Ready', 'The description has been improved. If you want to bring it to Jira, use the "Update Jira" button.', 'success');
+    Swal.fire(leng.EXITO_SWAL, leng.MSG_IA_MEJORA_OK, 'success');
     document.getElementById('btn-reemplazar-desc').disabled = false;
   }
   catch (e) {
     Swal.close();
-    Swal.fire('Error', 'Error improving description', 'error');
+    Swal.fire('Error', leng.MSG_IA_ERROR_MEJORA, 'error');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
-    els.improveStatus.textContent = `Failed to improve: ${String(e.message || e)}`;
   }
   finally {
     els.btnImprove.disabled = false;
@@ -159,7 +157,7 @@ export async function improveDescriptionOpenAI(els) {
   let statusT = els.status.value;
 
   if (issueT.length < 2 || summaryT.length < 2 || statusT.length < 2) {
-    Swal.fire('Upss!', 'You must be on a valid JIRA issue to improve the description.', 'warning');
+    Swal.fire('Upss!', leng.MSG_JIRA_ISSUE_INVALIDA, 'warning');
     return;
   }
 
@@ -168,8 +166,7 @@ export async function improveDescriptionOpenAI(els) {
   els.improveStatus.textContent = '';
   const original = els.descOriginal.value.trim();
   if (!original) {
-    els.improveStatus.textContent = 'There is no original description to improve.';
-    Swal.fire('Upss!', 'Theres no description in the issue to improve. (Make sure youre not editing the description.)', 'error');
+    Swal.fire('Upss!', leng.MSG_JIRA_ERROR_NO_DESCRIPCION, 'error');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
     document.getElementById('div-desc-mejorada').style = "display:none";
@@ -179,8 +176,7 @@ export async function improveDescriptionOpenAI(els) {
 
   const { openai_token = '' } = await chrome.storage.sync.get('openai_token');
   if (!openai_token) {
-    Swal.fire('Upss!', 'You must enter the OpenAI token in the configuration panel', 'warning');
-    els.improveStatus.textContent = 'OpenAI token missing. Save it first..';
+    Swal.fire('Upss!', leng.MSG_IA_OPENAI_ERROR1, 'warning');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
     document.getElementById('div-desc-mejorada').style = "display:none";
@@ -188,8 +184,8 @@ export async function improveDescriptionOpenAI(els) {
   }
 
   Swal.fire({
-    title: 'Improving description with AI.',
-    text: 'Please wait, depending on the AI ​​model used, this may take a while..',
+    title: leng.MSG_IA_MEJORA_OPENAI,
+    text: leng.MSG_IA_ESPERA,
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
@@ -197,15 +193,11 @@ export async function improveDescriptionOpenAI(els) {
     }
   });
 
-
-  els.improveStatus.textContent = 'Improving description...';
   els.btnImprove.disabled = true;
   const { model } = await getOpenAIModel();
   const { promptbase } = await chrome.storage.sync.get(['promptbase']);
 
   try {
-    // Puedes cambiar model/base si lo prefieres
-
     const apiBase = ENDPOINTS.OPENAI_CHAT;
     const modelo = model;
     const resp = await fetch(apiBase, {
@@ -221,7 +213,7 @@ export async function improveDescriptionOpenAI(els) {
             role: 'system',
             content: promptbase
           },
-          { role: 'user', content: `Improve this Jira description:\n\n${original}` }
+          { role: 'user', content: `${leng.MSG_IA_PREPROMT}\n\n${original}` }
         ],
         temperature: 1
       })
@@ -236,21 +228,21 @@ export async function improveDescriptionOpenAI(els) {
 
     const data = await resp.json();
     const improved = data?.choices?.[0]?.message?.content?.trim() || '';
-    els.descImproved.value = improved || '(no content)';
-    els.improveStatus.textContent = improved ? 'Improved description list.' : 'Improved text did not arrive.';
+    els.descImproved.value = improved || '(?)';
     els.divimprove.style = 'display:block';
     document.getElementById('robot-durmiento').style = 'display:none';
+    document.getElementById("divcreatetests").style = 'display:none';
     //els.btnImprove.disabled = false;
     Swal.close();
-    Swal.fire('Ready', 'The description has been improved. If you want to bring it to Jira, use the "Update Jira" button.', 'success');
+    Swal.fire(leng.EXITO_SWAL, leng.MSG_IA_MEJORA_OK, 'success');
     document.getElementById('btn-reemplazar-desc').disabled = false;
   }
   catch (e) {
     Swal.close();
-    Swal.fire('Error', 'Error improving description', 'error');
+    Swal.fire('Error', leng.MSG_IA_ERROR_MEJORA, 'error');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
-    els.improveStatus.textContent = `Failed to improve: ${String(e.message || e)}`;
+    document.getElementById('div-desc-mejorada').style = 'display:none';
   }
   finally {
     els.btnImprove.disabled = false;
@@ -263,7 +255,7 @@ export async function improveDescriptionChrome(els) {
   let statusT = els.status.value;
 
   if (issueT.length < 2 || summaryT.length < 2 || statusT.length < 2) {
-    Swal.fire('Upss!', 'You must be on a valid JIRA issue to improve the description.', 'warning');
+    Swal.fire('Upss!', leng.MSG_JIRA_ISSUE_INVALIDA, 'warning');
     return;
   }
 
@@ -272,8 +264,7 @@ export async function improveDescriptionChrome(els) {
   els.improveStatus.textContent = '';
   const original = els.descOriginal.value.trim();
   if (!original) {
-    els.improveStatus.textContent = 'There is no original description to improve.';
-    Swal.fire('Upss!', 'There is no description in the issue to improve. (Make sure you are not editing the description.)', 'error');
+    Swal.fire('Upss!', leng.MSG_JIRA_ERROR_NO_DESCRIPCION, 'error');
     document.getElementById('btn-reemplazar-desc').disabled = true;
     document.getElementById('desc-improved').value = "";
     document.getElementById('div-desc-mejorada').style = "display:none";
@@ -281,8 +272,8 @@ export async function improveDescriptionChrome(els) {
   }
 
   Swal.fire({
-    title: 'Improving description with AI.',
-    text: 'Please wait, this AI may take a couple of minutes, do not close this view.',
+    title: leng.MSG_IA_MEJORA_CHROME,
+    text: leng.MSG_IACHROME_WAIT,
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
@@ -292,44 +283,58 @@ export async function improveDescriptionChrome(els) {
 
   const { promptbase } = await chrome.storage.sync.get(['promptbase']);
   // 1) comprobar disponibilidad (descarga el modelo si hace falta)
-  const availability = await LanguageModel.availability();
+  /*const availability = await LanguageModel.availability();
   if (availability === 'unavailable') {
-    Swal.fire('Error', 'No available model found. Check the console for more details.', 'error');
+    Swal.fire('Error', leng.MSG_CHROMEIA_NOT, 'error');
+    console.log(e);
+    return;
+  }*/
+
+  try {
+  const LLM_OPTS = {
+    // ajusta los idiomas según tu Description (puede ser 'en','es' o 'ja')
+    expectedInputs: [{ type: 'text', languages: ['es'] }],   // system + user input langs
+    expectedOutputs: [{ type: 'text', languages: ['es'] }], // output lang(s) esperadas
+    initialPrompts: [{ role: 'system', content: leng.MSG_FIST_INSTRUCTION }]
+  };
+
+  // 1) verificar disponibilidad PASANDO LAS MISMAS OPCIONES
+  const availability = await LanguageModel.availability(LLM_OPTS);
+  console.log('LanguageModel availability:', availability);
+  // si devuelve 'downloadable' -> el usuario debe interactuar para permitir la descarga
+  if (availability === 'unavailable') {
+    Swal.fire('Error', leng.MSG_CHROMEIA_NOT, 'error');
     console.log(e);
     return;
   }
 
-  try {
-    const LLM_OPTS = {
-      expectedOutputLanguage: 'en',
-      expectedOutputLanguages: ['en'],
-      outputLanguageCode: 'en',
-      // entrada (opcional pero recomendable)
-      expectedInputLanguages: ['en'],
-    };
-    const session = await LanguageModel.create({
-      ...LLM_OPTS,
-      initialPrompts: [
-        { role: 'system', content: 'You are an expert in software quality and testing.' }
-      ]
-    });
+  // 2) crear sesión con las mismas opciones
+  const session = await LanguageModel.create(LLM_OPTS);
 
-    // 3) lanzar un prompt
-    const answer = await session.prompt(
-      `Description: ${original} ${promptbase}`,
-      { ...LLM_OPTS }
-    );
-    els.descImproved.value = answer || '(no content)';
-    els.divimprove.style = 'display:block';
-    document.getElementById('robot-durmiento').style = 'display:none';
-    Swal.close();
-    Swal.fire('Ready', 'The description has been improved. If you want to bring it to Jira, use the "Update Jira" button.', 'success');
-    document.getElementById('btn-reemplazar-desc').disabled = false;
-    session.destroy();
-  } catch (e) {
-    Swal.fire('Error', 'Error improving description, check console for more details.', 'error');
-    console.log(e);
-  }
+  // 3) llamar a prompt PASANDO DE NUEVO LAS MISMAS OPCIONES (muy importante)
+  const userMessage = `${leng.DESCRIPTION}: ${original} ${promptbase}`;
+  const answer = await session.prompt(
+    [{ role: 'user', content: userMessage }],
+    LLM_OPTS
+  );
+
+  console.log('answer:', answer);
+  // tu UI
+  els.descImproved.value = answer || '(no content)';
+  els.divimprove.style = 'display:block';
+  document.getElementById('robot-durmiento').style = 'display:none';
+  document.getElementById("divcreatetests").style = 'display:none';
+  Swal.close();
+  Swal.fire(leng.EXITO_SWAL, leng.MSG_IA_MEJORA_OK, 'success');
+  document.getElementById('btn-reemplazar-desc').disabled = false;
+  session.destroy();
+} catch (e) {
+  // imprime todo para depuración: nombre, mensaje y stack
+  console.error('LM error', e?.name, e?.message, e?.stack);
+  Swal.fire('Error', leng.MSG_IA_ERROR_MEJORA, 'error');
+}
+
+
 
 }
 
@@ -344,14 +349,13 @@ export async function savedataIA() {
 
       if (!val) {
         await chrome.storage.sync.remove('gemini_token');
-        els.improveStatus.textContent = 'Token eliminado.';
         await chrome.storage.sync.set({
           gemini_model: model
         });
         Swal.fire({
           icon: 'success',
-          title: `All good`,
-          text: `You have successfully deleted the token.`,
+          title: leng.EXITO_SWAL,
+          text: leng.MSG_IA_ELIMINA_TOKEN,
           confirmButtonText: 'OK'
         });
         await chrome.storage.sync.set({
@@ -360,18 +364,15 @@ export async function savedataIA() {
         return;
       }
 
-      // Si el usuario pegó el token "enmascarado", no lo pisamos
-      // pero si guardamos el modelo seleccionado
       if (isMasked(val)) {
-        els.improveStatus.textContent = 'Token already saved.';
         await chrome.storage.sync.set({
           gemini_model: model
         });
 
         Swal.fire({
           icon: 'success',
-          title: `All good`,
-          text: `The selected model has been successfully stored.`,
+          title: leng.EXITO_SWAL,
+          text: leng.MSG_IA_MODEL_OK,
           confirmButtonText: 'OK'
         });
         await chrome.storage.sync.set({
@@ -379,8 +380,6 @@ export async function savedataIA() {
         });
         return;
       }
-      //si no se cumplen las condiciones anteriores, guardamos el token
-      // y actualizamos el modelo seleccionado
       await chrome.storage.sync.set({
         gemini_token: val,
         gemini_model: model
@@ -391,16 +390,14 @@ export async function savedataIA() {
       });
       Swal.fire({
         icon: 'success',
-        title: `All good`,
-        text: `AI data has been successfully stored.`,
+        title: leng.EXITO_SWAL,
+        text: leng.MSG_IA_DATA_OK,
         confirmButtonText: 'OK'
       });
 
     } catch (e) {
-      console.log("error: ", e);
+      console.log("Error guardando el token: ", e);
     }
-
-    //testOpenAIConfig();
   } else if (seleccion == "OpenAI") {
     const val = els.tokenInput.value.trim();
     const model = els.modelSelect?.value || 'gpt-4o-mini';
@@ -410,14 +407,13 @@ export async function savedataIA() {
     //se guarda la preferencia del modelo
     if (!val) {
       await chrome.storage.sync.remove('openai_token');
-      els.improveStatus.textContent = 'Deleted token.';
       await chrome.storage.sync.set({
         openai_model: model
       });
       Swal.fire({
         icon: 'success',
-        title: `All good`,
-        text: `You have successfully deleted the token`,
+        title: leng.EXITO_SWAL,
+        text: leng.MSG_IA_ELIMINA_TOKEN,
         confirmButtonText: 'OK'
       });
       await chrome.storage.sync.set({
@@ -429,7 +425,6 @@ export async function savedataIA() {
     // Si el usuario pegó el token "enmascarado", no lo pisamos
     // pero si guardamos el modelo seleccionado
     if (isMasked(val)) {
-      els.improveStatus.textContent = 'Token already saved.';
       //para setear un posible cambio de modelo, manteniendo el token
       await chrome.storage.sync.set({
         openai_model: model
@@ -437,8 +432,8 @@ export async function savedataIA() {
 
       Swal.fire({
         icon: 'success',
-        title: `Todo bien`,
-        text: `The selected model has been successfully stored.`,
+        title: leng.EXITO_SWAL,
+        text: leng.MSG_IA_MODEL_OK,
         confirmButtonText: 'OK'
       });
       await chrome.storage.sync.set({
@@ -459,24 +454,24 @@ export async function savedataIA() {
     });
     Swal.fire({
       icon: 'success',
-      title: `All good`,
-      text: `AI data has been successfully stored.`,
+      title: leng.EXITO_SWAL,
+      text: leng.MSG_IA_DATA_OK,
       confirmButtonText: 'OK'
     });
     testOpenAIConfig();
   } else if (seleccion == "ChromeIA") {
     Swal.fire({
       icon: 'success',
-      title: `All good`,
-      text: `The selected AI has been successfully stored.`,
+      title: leng.EXITO_SWAL,
+      text: leng.MSG_IA_MODEL_OK,
       confirmButtonText: 'OK'
     });
     await chrome.storage.sync.set({
       ia_default: 'chrome'
     });
+
+
   }
-
-
 }
 
 export async function testOpenAIConfig() {
@@ -492,9 +487,9 @@ export async function testOpenAIConfig() {
   if (!resp.ok) {
     Swal.fire({
       icon: 'error',
-      title: `Houston we have a problem`,
-      text: `The token doesn't look correct or the model isn't enabled in your OpenAI account.`,
-      confirmButtonText: 'I will review'
+      title: leng.MSG_ERROR_SWAL,
+      text: leng.MSG_IA_OPENAI_ERROR_TOKEN,
+      confirmButtonText: leng.BTN_ENTIENDO
     });
     document.getElementById('openai-token').value = '';
     await chrome.storage.sync.set({
@@ -509,16 +504,16 @@ export async function testOpenAIConfig() {
   if (exists) {
     Swal.fire({
       icon: 'success',
-      title: `All good`,
-      text: `The data has been saved, your account looks correct.`,
+      title: leng.EXITO_SWAL,
+      text: leng.MSG_IA_GUARDADO_OK,
       confirmButtonText: 'OK'
     });
   } else {
     Swal.fire({
       icon: 'error',
-      title: `Houston we have a problem`,
-      text: `The token doesn't look correct or the model isn't enabled in your OpenAI account.`,
-      confirmButtonText: 'I will review'
+      title: leng.MSG_ERROR_SWAL,
+      text: leng.MSG_IA_OPENAI_ERROR_TOKEN,
+      confirmButtonText: leng.BTN_ENTIENDO
     });
     document.getElementById('openai-token').value = '';
     await chrome.storage.sync.set({

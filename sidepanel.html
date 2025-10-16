@@ -4,12 +4,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hakaboost</title>
+    <title>TestHunt</title>
     <link rel="stylesheet" href="css/bootstrap.css" />
     <link rel="stylesheet" href="css/personal.css" />
     <link rel="stylesheet" href="css/css/font-awesome.min.css" />
-    <script src="js/bootstrap.js"></script>
     <script src="js/jquey.js"></script>
+    <script src="js/bootstrap.js"></script>
+    
     <script src="js/swal.js"></script>
 
 </head>
@@ -18,16 +19,17 @@
     <main class="flex-grow-1 overflow-auto">
         <div class="container-fluid">
             <div class="row" style="margin-top: 10px;">
-                <div class="col-12">
-                    <h4>Hakaboost: HakaLab testing co-pilot</h4>
+                <div class="col-12 text-center">
+                    <img src="img/logo HakaBoost.png" width="180px">
+                    <p id="title_main"></p>
                 </div>
             </div>
-            <ul class="nav nav-tabs" style="margin-top: 15px;">
+            <ul class="nav nav-tabs" style="margin-top: 5px;">
                 <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#main">Co-pilot</a>
+                    <a class="nav-link active" data-bs-toggle="tab" href="#main" id="copilot"></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#otra">Settings</a>
+                    <a class="nav-link" data-bs-toggle="tab" href="#otra" id="configuraciones"></a>
                 </li>
 
             </ul>
@@ -55,7 +57,7 @@
                     </div>
                     <div class="col-6">
                         <div class="input-group mb-3 input-group-sm">
-                            <span class="input-group-text">State</span>
+                            <span class="input-group-text" id="label_estado"></span>
                             <input id="sp-status" type="text" disabled class="form-control">
                         </div>
                     </div>
@@ -63,7 +65,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="input-group mb-3 input-group-sm">
-                            <span class="input-group-text">Title</span>
+                            <span class="input-group-text" id="label_titulo"></span>
                             <input id="sp-summary" type="text" disabled class="form-control">
                         </div>
                     </div>
@@ -71,12 +73,9 @@
                 <hr class="my-2">
                 <div class="row">
                     <div class="col-12">
-                        <button class="btn" style="display: none;" id="btn-load-desc">Read current description </button>
-                        <button class="btn btn-sm btn-primary my-2" id="btn-improve">Improve Desc. <i
-                                class="fa fa-cogs"></i></button>
-
-                        <button id="btn-crear-escenarios" class="btn btn-sm btn-primary my-2">Create Tests <i
-                                class="fa fa-bolt"></i></button>
+                        <button class="btn" style="display: none;" id="btn-load-desc"> </button>
+                        <button class="btn btn-sm btn-outline-primary my-2" id="btn-improve"> </button>
+                        <button id="btn-crear-escenarios" class="btn btn-sm btn-outline-primary my-2"> </button>
                         <button id="btn-question" class="btn btn-sm btn-warning my-2"> <i class="fa fa-question"
                                 aria-hidden="true"></i></button>
                     </div>
@@ -88,15 +87,15 @@
                         <p style="font-size: 14px;" id="improve-status"></p>
                     </div>
                     <div style="margin-top:2px; display: none;">
-                        <label>Original description</label>
+                        <label id="label_descrip_original"></label>
                         <textarea id="desc-original" rows="6" class="form-control"></textarea>
                     </div>
                     <div class="col-12">
                         <div id="div-desc-mejorada" style="display: none;">
-                            <label>Improved description</label>
+                            <label id="label_descrip_mejorada"></label>
                             <textarea id="desc-improved" rows="6" class="form-control" readonly></textarea>
-                            <button id="btn-reemplazar-desc" disabled class="btn btn-sm btn-outline-success mt-3">Update
-                                Jira <i class="fa fa-rocket"></i></button>
+                            <button id="btn-reemplazar-desc" disabled
+                                class="btn btn-sm btn-outline-success mt-3"></button>
                             <button id="btndownloadfeature" class="btn btn-sm btn-outline-success mt-3">Feature <i
                                     class="fa fa-cloud-download" aria-hidden="true"></i>
                             </button>
@@ -107,27 +106,26 @@
                 <div class="row" id="divcreatetests" style="display: none">
                     <hr class="my-2">
                     <div class="col-12">
-                        <label>The following tests will be created in Jira:</label>
+                        <label id="label_aviso_test"></label>
                         <div class="row" id="seccion_testAcrear">
 
                         </div>
                         <div class="col-12" style="margin-top: 10px;">
-                            <p style="font-size: 11px;">By default, these tests are linked (depending on your
-                                configuration) to the current issue in Jira. You can change this from the "Issue
-                                Principal" option.</p>
+                            <p style="font-size: 11px;" id="label_aviso_links"></p>
                         </div>
                         <div class="row align-items-end">
                             <div class="col-10">
-                                <label for="mainissue" class="form-label-sm">Main Issue</label>
+                                <label for="mainissue" class="form-label-sm" id="label_mainissue"></label>
                                 <div class="input-group input-group-sm">
                                     <select class="form-select" id="mainissue">
                                     </select>
-                                    <button class="btn btn-sm btn-success" id="crearTestEnJira">Create in Jira <i
-                                            class="fa fa-cloud-upload" aria-hidden="true"></i></button>
+                                    <button class="btn btn-sm btn-success" id="crearTestEnJira"></button>
                                     <button class="btn btn-sm btn-outline-success mx-2" id="cucumber_xray"
-                                        style="display: none;">Cucumber Xray</button>
+                                        style="display: none;"
+                                        title="Descarga el archivo .feature incluyendo los Tegs en los escenarios">Cucumber
+                                        Xray</button>
                                     <button id="cleantests" class="btn btn-sm btn-warning"
-                                        alt="Limpia la sección de test"><i class="fa fa-trash" aria-hidden="true"></i>
+                                        title="Limpia la sección de test"><i class="fa fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
@@ -141,8 +139,8 @@
                 <div class="row" id="robot-durmiento">
                     <div class="col-12 text-center">
                         <div class="text-center my-3">
-                            <img src="img/robot durmiendo.png" class="img-fluid" alt="My logo"
-                                style="max-width: 230px;">
+                            <img src="img/hk.png" class="img-fluid" alt="My logo"
+                                style="max-width: 30%; margin-top: 18%;">
                         </div>
                     </div>
                 </div>
@@ -157,17 +155,15 @@
             <div id="otra" class="tab-pane fade container-fluid">
                 <div class="row">
                     <div class="col-10">
-                        <p style="font-size: 12px;"><strong>Important:</strong> This data is used only locally.</p>
+                        <p style="font-size: 12px;" id="label_aviso_datos"></p>
                     </div>
                 </div>
                 <div class="accordion accordion-flush" id="configAccordion">
                     <!-- Ajustes de IA -->
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingIA">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseIA" aria-expanded="true" aria-controls="collapseIA">
-                                <strong>AI settings</strong>
-                            </button>
+                            <button id="btn_ajustes_ia" class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseIA" aria-expanded="true" aria-controls="collapseIA"></button>
                         </h2>
                         <div id="collapseIA" class="accordion-collapse collapse show" aria-labelledby="headingIA"
                             data-bs-parent="#configAccordion">
@@ -175,9 +171,9 @@
 
                                 <div class="row">
                                     <div class="col-8 offset-1 mb-1">
-                                        <label for="iaselect" class="form-label-sm">AI Selection:</label>
+                                        <label for="iaselect" class="form-label-sm" id="iaseleccion"></label>
                                         <select class="form-select form-select-sm" id="iaselect">
-                                            <option value="ChromeIA">Chrome Built-in AI</option>
+                                            <!--<option value="ChromeIA">Chrome Built-in AI</option>-->
                                             <option value="OpenAI">OpenAI</option>
                                             <option value="Google Gemini">Google Gemini</option>
                                         </select>
@@ -187,8 +183,7 @@
                                 <div id="openai-data">
                                     <div class="row">
                                         <div class="col-5 offset-1">
-                                            <label for="openai-model" class="form-label-sm">Select model
-                                                OpenAI</label>
+                                            <label for="openai-model" class="form-label-sm" id="sel_modelo_ia"></label>
                                             <select class="form-select form-select-sm" id="openai-model">
                                                 <optgroup label="GPT-5">
                                                     <option value="gpt-5">gpt-5</option>
@@ -207,7 +202,7 @@
                                             </select>
                                         </div>
                                         <div class="col-5">
-                                            <label class="form-label-sm">API OpenAI Token</label>
+                                            <label class="form-label-sm">Token API OpenAI</label>
                                             <div class="input-group-sm mb-2">
                                                 <input id="openai-token" type="password" class="form-control"
                                                     placeholder="Search">
@@ -219,13 +214,9 @@
                                 <div id="gemini-data">
                                     <div class="row">
                                         <div class="col-5 offset-1">
-                                            <label for="gemini-model" class="form-label-sm">Select model
-                                                Gemini</label>
+                                            <label for="gemini-model" class="form-label-sm"
+                                                id="sel_mode_gemini"></label>
                                             <select class="form-select form-select-sm" id="gemini-model">
-                                                <optgroup label="Gemini 1.5">
-                                                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                                                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                                                </optgroup>
                                                 <optgroup label="Gemini 2.0">
                                                     <option value="gemini-2.0-flash">gemini-2.0-flash</option>
                                                 </optgroup>
@@ -262,17 +253,15 @@
                     <!-- Ajustes de Jira -->
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingJira">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseJira" aria-expanded="false" aria-controls="collapseJira">
-                                <strong>Jira Settings</strong>
+                            <button id="jira_setting_menu" class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseJira" aria-expanded="false"
+                                aria-controls="collapseJira">
                             </button>
                         </h2>
                         <div id="collapseJira" class="accordion-collapse collapse" aria-labelledby="headingJira"
                             data-bs-parent="#configAccordion">
                             <div class="accordion-body">
-                                <p style="font-size: 11px;">Used for: 1) Automatically replace the description
-                                    with the AI-suggested improvement. 2) Create tests based on the current Jira
-                                    description </p>
+                                <p style="font-size: 11px;" id="label_uso_jira"></p>
 
                                 <div class="row">
                                     <div class="col-5 offset-1">
@@ -290,7 +279,7 @@
                                         </div>
                                     </div>
                                     <div class="col-10 offset-1">
-                                        <label class="form-label-sm">Jira Token</label>
+                                        <label class="form-label-sm">Token Jira</label>
                                         <div class="input-group-sm mb-2">
                                             <input id="jira-token" type="password" placeholder="API token Atlassian"
                                                 class="form-control">
@@ -298,20 +287,20 @@
                                     </div>
 
                                     <div class="col-5 offset-1">
-                                        <label class="form-label-sm">Issue to Create</label>
+                                        <label class="form-label-sm" id="label_issuetype"></label>
                                         <div class="input-group input-group-sm mb-3">
                                             <div class="input-group-text">
                                                 <input type="checkbox" id="chkissuetype">
                                             </div>
                                             <input type="text" id="inpissuetype" disabled value="Test"
-                                                class="form-control" placeholder="You must specify a valid task">
-                                            <button class="btn btn-warning" id="issue_q" title="What is this?"><i
+                                                class="form-control" placeholder="Debes especificar una tarea válida">
+                                            <button class="btn btn-warning" id="issue_q" title="¿Qué es esto?"><i
                                                     class="fa fa-question" aria-hidden="true"></i></button>
                                         </div>
                                     </div>
 
                                     <div class="col-5">
-                                        <label for="linked" class="form-label-sm">Link Type</label>
+                                        <label for="linked" class="form-label-sm" id="label_typelink"></label>
                                         <div class="input-group input-group-sm">
                                             <select class="form-select" id="linked">
                                                 <option value="Test">Test</option>
@@ -319,7 +308,7 @@
                                                 <option value="Blocks">Blocks</option>
                                                 <option value="Causes">Causes</option>
                                             </select>
-                                            <button class="btn btn-warning" id="linked_q" title="What is this?"><i
+                                            <button class="btn btn-warning" id="linked_q" title="¿Qué es esto?"><i
                                                     class="fa fa-question" aria-hidden="true"></i></button>
                                         </div>
                                     </div>
@@ -328,7 +317,7 @@
                                         <button class="btn btn-sm btn-success me-1" id="save-jira"
                                             title="Guarda los datos de Jira"><i class="fa fa-floppy-o"></i></button>
                                         <button class="btn btn-sm btn-danger" id="clear-jira"
-                                            title="Delete all XRAY data"><i class="fa fa-trash"
+                                            title="Elimina todos los datos de XRAY"><i class="fa fa-trash"
                                                 aria-hidden="true"></i></button>
                                     </div>
                                 </div>
@@ -339,15 +328,16 @@
                     <!-- Ajustes de Xray -->
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingXray">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseXray" aria-expanded="false" aria-controls="collapseXray">
-                                <strong>Xray Settings (Optional)</strong>
+                            <button id="label_xray_ajustes" class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseXray" aria-expanded="false"
+                                aria-controls="collapseXray">
                             </button>
                         </h2>
                         <div id="collapseXray" class="accordion-collapse collapse" aria-labelledby="headingXray"
                             data-bs-parent="#configAccordion">
                             <div class="accordion-body">
-                                <p style="font-size: 11px;">Used for: 1) Set the test type (Cucumber or Manual) 2) Adding the stage gherkin to cucumber-type tests</p>
+                                <p style="font-size: 11px;" id="label_desc_xray"></p>
+
                                 <div class="row">
                                     <div class="col-5 offset-1">
                                         <label class="form-label-sm">Client ID</label>
@@ -384,14 +374,20 @@
 
         </div>
     </main>
+    <div class="container">
+        <div class="row" style="margin-top:20px;">
+            <div class="col-12 text-center">
+                <button id="cofee" class="btn btn-outline-dark"><i class="fa fa-coffee" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    </div>
 
-    <footer class="text-center" style="margin-top:10px;"></footer>
-    <div class="text-center p-3" style="background-color: rgba(21, 35, 127, 1); color: aliceblue;">
-        Visitanos en
-        <a style="color: white;" href="https://hakalab.com/">https://hakalab.com</a>
+    <footer class="text-center" style="margin-top:10px;">
+    <div class="text-center p-3" style="background-color: rgba(21, 35, 127, 1); color: aliceblue;" id="haka_link">
+
     </div>
     </footer>
-</body>
+
 
 <script type="module" src="js/crearTest.js"></script>
 <script type="module" src="sidepanel.js"></script>
