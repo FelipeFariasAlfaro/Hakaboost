@@ -149,7 +149,7 @@
 
     "DOWNLOAD":"Descargando modelo...",
     "PREPARE_IA":"Preparando IA (descarga)",
-    "MSG_INTERNO_DOWNLOAD": "Si aparece un diálogo del navegador, acepta para permitir la descarga.<br>Esto puede tardar varios minutos, no cierres este sidepanel<br><strong>Importante:</strong> Al finalizar intentaremos realizar la consulta, si ocurre un error puede que sea necesario reiniciar Google Chrome para activar la IA.",
+    "MSG_INTERNO_DOWNLOAD": "Si aparece un diálogo del navegador, acepta para permitir la descarga.<br>Esto puede tardar varios minutos, no cierres este sidepanel<br><strong>Importante:</strong> Al finalizar intentaremos realizar la consulta, <strong>si ocurre un error puede que sea necesario reiniciar Google Chrome para activar la IA.<strong>",
     "AVISO_DESCARGA":"El modelo no está en este equipo. Iniciando descarga...",
     "DOWNLOAD_WAIT":"Descargando, espera...",
     "AVANCE":"Descargado",
