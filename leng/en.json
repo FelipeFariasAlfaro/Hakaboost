@@ -149,7 +149,7 @@
 
     "DOWNLOAD":"Downloading model...",
     "PREPARE_IA":"Preparing AI (download)",
-    "MSG_INTERNO_DOWNLOAD": "If a browser dialog box appears, accept to allow the download.<br>This may take several minutes, do not close this sidepanel",
+    "MSG_INTERNO_DOWNLOAD": "If a browser dialog box appears, accept to allow the download.<br>This may take several minutes, do not close this sidepanel<br><strong>Important:</strong> At the end, we will attempt to perform the query. If an error occurs, it may be necessary to restart Google Chrome to activate AI.",
     "AVISO_DESCARGA":"This model is not on this computer. Starting download...",
     "DOWNLOAD_WAIT":"Downloading, wait...",
     "AVANCE":"Progress",
