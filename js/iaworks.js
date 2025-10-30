@@ -149,6 +149,9 @@ export async function improveDescriptionGemini(els) {
     els.btnImprove.disabled = false;
   }
 }
+
+
+
 // == ChatGPT ==
 export async function improveDescriptionOpenAI(els) {
 
@@ -189,7 +192,7 @@ export async function improveDescriptionOpenAI(els) {
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
-      Swal.showLoading(); // icono de loading
+      Swal.showLoading();
     }
   });
 
@@ -232,7 +235,6 @@ export async function improveDescriptionOpenAI(els) {
     els.divimprove.style = 'display:block';
     document.getElementById('robot-durmiento').style = 'display:none';
     document.getElementById("divcreatetests").style = 'display:none';
-    //els.btnImprove.disabled = false;
     Swal.close();
     Swal.fire(leng.EXITO_SWAL, leng.MSG_IA_MEJORA_OK, 'success');
     document.getElementById('btn-reemplazar-desc').disabled = false;
@@ -250,6 +252,7 @@ export async function improveDescriptionOpenAI(els) {
 }
 
 export async function improveDescriptionChrome(els) {
+  // validaciones iniciales
   let issueT = els.issue.value;
   let summaryT = els.summary.value;
   let statusT = els.status.value;
@@ -271,72 +274,169 @@ export async function improveDescriptionChrome(els) {
     return;
   }
 
-  Swal.fire({
-    title: leng.MSG_IA_MEJORA_CHROME,
-    text: leng.MSG_IACHROME_WAIT,
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    didOpen: () => {
-      Swal.showLoading(); // icono de loading
-    }
-  });
-
+  // Obtener config/strings
   const { promptbase } = await chrome.storage.sync.get(['promptbase']);
-  // 1) comprobar disponibilidad (descarga el modelo si hace falta)
-  /*const availability = await LanguageModel.availability();
-  if (availability === 'unavailable') {
-    Swal.fire('Error', leng.MSG_CHROMEIA_NOT, 'error');
-    console.log(e);
-    return;
-  }*/
+  const { lenguaje } = await chrome.storage.sync.get(['lenguaje']);
 
-  try {
   const LLM_OPTS = {
-    // ajusta los idiomas según tu Description (puede ser 'en','es' o 'ja')
-    expectedInputs: [{ type: 'text', languages: ['es'] }],   // system + user input langs
-    expectedOutputs: [{ type: 'text', languages: ['es'] }], // output lang(s) esperadas
+    expectedInputs: [{ type: 'text', languages: [lenguaje] }],
+    expectedOutputs: [{ type: 'text', languages: [lenguaje] }],
     initialPrompts: [{ role: 'system', content: leng.MSG_FIST_INSTRUCTION }]
   };
 
-  // 1) verificar disponibilidad PASANDO LAS MISMAS OPCIONES
-  const availability = await LanguageModel.availability(LLM_OPTS);
-  console.log('LanguageModel availability:', availability);
-  // si devuelve 'downloadable' -> el usuario debe interactuar para permitir la descarga
-  if (availability === 'unavailable') {
-    Swal.fire('Error', leng.MSG_CHROMEIA_NOT, 'error');
-    console.log(e);
-    return;
+  // helpers UI
+  let modalShown = false;
+  let modalType = null; // 'spinner' | 'download'
+  function showSpinnerModal() {
+    modalShown = true; modalType = 'spinner';
+    Swal.fire({
+      title: leng.MSG_IA_MEJORA_CHROME,
+      text: leng.MSG_IACHROME_WAIT,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+  }
+  function showDownloadModal(initialText = leng.DOWNLOAD) {
+    modalShown = true; modalType = 'download';
+    Swal.fire({
+      title: leng.PREPARE_IA,
+      html: `
+        <div style="text-align:left">
+          <div id="ia-progress-text">${initialText}</div>
+          <div style="margin-top:8px">
+            <div style="background:#eee;border-radius:6px;overflow:hidden">
+              <div id="ia-progress-bar" style="width:0%;height:12px;transition:width 300ms ease"></div>
+            </div>
+          </div>
+          <div style="margin-top:6px;font-size:12px;color:#666">
+            ${leng.MSG_INTERNO_DOWNLOAD}
+          </div>
+        </div>
+      `,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false
+    });
+  }
+  function updateDownloadProgress(pct, text) {
+    const container = Swal.getHtmlContainer();
+    if (!container) return;
+    const bar = container.querySelector('#ia-progress-bar');
+    const txt = container.querySelector('#ia-progress-text');
+    if (bar) bar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    if (txt && text) txt.textContent = text;
+  }
+  function closeModal() {
+    try { Swal.close(); } catch (err) { /* ignore */ }
+    modalShown = false; modalType = null;
   }
 
-  // 2) crear sesión con las mismas opciones
-  const session = await LanguageModel.create(LLM_OPTS);
+  let session = null;
 
-  // 3) llamar a prompt PASANDO DE NUEVO LAS MISMAS OPCIONES (muy importante)
-  const userMessage = `${leng.DESCRIPTION}: ${original} ${promptbase}`;
-  const answer = await session.prompt(
-    [{ role: 'user', content: userMessage }],
-    LLM_OPTS
-  );
+  try {
+    // 1) consultamos disponibilidad y DECIDIMOS modal en base a eso
+    const availability = await LanguageModel.availability(LLM_OPTS);
+    console.log('LanguageModel availability:', availability);
 
-  console.log('answer:', answer);
-  // tu UI
-  els.descImproved.value = answer || '(no content)';
-  els.divimprove.style = 'display:block';
-  document.getElementById('robot-durmiento').style = 'display:none';
-  document.getElementById("divcreatetests").style = 'display:none';
-  Swal.close();
-  Swal.fire(leng.EXITO_SWAL, leng.MSG_IA_MEJORA_OK, 'success');
-  document.getElementById('btn-reemplazar-desc').disabled = false;
-  session.destroy();
-} catch (e) {
-  // imprime todo para depuración: nombre, mensaje y stack
-  console.error('LM error', e?.name, e?.message, e?.stack);
-  Swal.fire('Error', leng.MSG_IA_ERROR_MEJORA, 'error');
+
+    const alreadyAvailable = (availability === 'available');
+
+    // mostrar *solo* el modal que corresponda
+    if (alreadyAvailable) {
+      showSpinnerModal();
+    } else {
+      showDownloadModal(leng.AVISO_DESCARGA);
+    }
+
+    // 2) crear session pasando monitor (si viene downloadprogress lo usaremos para actualizar la barra)
+    session = await LanguageModel.create({
+      ...LLM_OPTS,
+      monitor: (m) => {
+        try {
+          const attach = (handler) => {
+            if (typeof m.addEventListener === 'function') m.addEventListener('downloadprogress', handler);
+            else if (typeof m.on === 'function') m.on('downloadprogress', handler);
+          };
+          attach((e) => {
+            // parse defensivo del evento
+            let pct = null;
+            try {
+              if (typeof e.loaded === 'number' && typeof e.total === 'number' && e.total > 0) {
+                pct = Math.round((e.loaded / e.total) * 100);
+              } else if (typeof e.loaded === 'number' && e.loaded <= 1) {
+                pct = Math.round(e.loaded * 100);
+              } else if (typeof e.loaded === 'number') {
+                pct = Math.round(e.loaded);
+              } else if (e?.detail && typeof e.detail.progress === 'number') {
+                pct = Math.round(e.detail.progress * 100);
+              }
+            } catch (err) {
+              console.warn('parse progress err', err);
+            }
+
+            // Si estamos en el flujo "download", actualizamos la barra. Si no, logueamos.
+            if (modalType === 'download') {
+              if (pct !== null) updateDownloadProgress(pct, `${leng.AVANCE} ${pct}%`);
+              else updateDownloadProgress(0, leng.DOWNLOAD_WAIT);
+            } else {
+              console.log('downloadprogress recibido pero modal no es de descarga', e);
+            }
+          });
+        } catch (monitorErr) {
+          console.warn('Monitor setup err', monitorErr);
+        }
+      }
+    });
+
+    // 3) create() completó -> prompt
+    const userMessage = `${leng.DESCRIPTION}: ${original} ${promptbase}`;
+    const answer = await session.prompt([{ role: 'user', content: userMessage }], LLM_OPTS);
+
+    // 4) cerramos modal (spinner o download) y seguimos con UX normal
+    closeModal();
+
+    els.descImproved.value = answer || '(no content)';
+    els.divimprove.style = 'display:block';
+    document.getElementById('robot-durmiento').style = 'display:none';
+    document.getElementById("divcreatetests").style = 'display:none';
+    Swal.fire(leng.EXITO_SWAL, leng.MSG_IA_MEJORA_OK, 'success');
+
+    await chrome.storage.sync.set({ uselocal: true });
+    document.getElementById('btn-reemplazar-desc').disabled = false;
+
+  } catch (e) {
+    console.error('LM error', e?.name, e?.message, e?.stack);
+    // DETECCIÓN ESPECIAL: dispositivo no elegible -> avisar al usuario y ofrecer fallback
+    const msg = (e && e.message) ? e.message : '';
+    const ineligible = /not.*eligible|not.*elegible|device.*not.*eligible|not.*eligible.*for.*on-?device/i.test(msg);
+
+    // cerramos cualquier modal previo
+    closeModal();
+
+    if (ineligible) {
+      // mensaje específico y opción de fallback a modelo remoto
+      Swal.fire({
+        title: leng.NOCOMPATIBLE,
+        html: `
+          ${leng.MSG_NOCOMPATIBLE}
+        `,
+        icon: 'error',
+        confirmButtonText: leng.BTN_ENTIENDO,
+      });
+    } else {
+      // manejo genérico de errores
+      Swal.fire('Error', leng.MSG_IA_ERROR_MEJORA, 'error');
+    }
+  } finally {
+    try { if (session && typeof session.destroy === 'function') session.destroy(); }
+    catch (err) { console.warn('Error destroying session', err); }
+  }
 }
 
 
 
-}
+
 
 
 export async function savedataIA() {

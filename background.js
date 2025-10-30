@@ -65,10 +65,8 @@ function safeRuntimeSendMessage(msg) {
       // Absorbe el error si no hay receptor
       void chrome.runtime.lastError;
     });
-  } catch (_) {
-    // Ignorar
-  }
-}
+  } catch (_) {}
+}  
 
 function safePortPostMessage(port, msg) {
   if (!port) return;
@@ -116,7 +114,6 @@ async function reconcileSidePanelForTab(tab) {
   } else {
     await enableSidePaneNoJira(tab.id);
     await disableSidePanel(tab.id);
-    //requestClosePanel(windowId);
   }
 }
 

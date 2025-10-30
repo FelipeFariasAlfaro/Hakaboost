@@ -24,7 +24,6 @@ export async function crearTest(els, elsCred, elsEsc) {
     // 2) detectar escenarios
     const scenarios = parseGherkinScenarios(original);
     if (!scenarios.length) {
-        //elsEsc.status.textContent = 'No encontré escenarios en Gherkin.';
         Swal.fire('Upss!', leng.MSG_CREATE_ERROR2_NO_ESCENARIOS, 'error');
         document.getElementById('divcreatetests').style = 'display:none';
         return;
@@ -80,7 +79,7 @@ export async function crearTest(els, elsCred, elsEsc) {
                         try {
                             await crearTestEnJira(selectedScenarios, elsEsc, els, elsCred);
                         } catch (e) {
-                            Swal.close();
+
                             console.error(e);
                             Swal.fire('Upss!', leng.MSG_CREATE_ERROR_GENERAL, 'error');
                         } finally {
@@ -129,7 +128,7 @@ async function crearTestEnJira(scenarios, elsEsc, els, elsCred) {
         const created = [];
         var xrayToken = "";
         if (await isXrayinUse()) {
-            // 🔹 obtener credenciales Xray Cloud
+            //obtener credenciales Xray Cloud
             const { xray_client_id, xray_client_secret } = await chrome.storage.sync.get([
                 'xray_client_id',
                 'xray_client_secret'
@@ -139,20 +138,19 @@ async function crearTestEnJira(scenarios, elsEsc, els, elsCred) {
                 throw new Error(leng.MSG_ERROR_NO_XRAY);
             }
 
-            // 🔹 autenticar en Xray una sola vez
+            //autenticar en Xray una sola vez
             xrayToken = await xrayAuthenticate(xray_client_id, xray_client_secret);
         }
 
 
-        // 🔹 obtener los escenarios seleccionados desde la UI
+        // obtener los escenarios seleccionados desde la UI
         const selectedScenarios = elsEsc.getSelectedScenarios();
         if (!selectedScenarios.length) {
             Swal.fire(leng.INFORMACION, leng.MSG_CREATE_ERROR_NOTEST, 'error');
             return;
         }
 
-        // 🔹 crear issues y setear Test Type
-
+        //crear issues y setear Test Type
         var mensajeCompleto = "";
 
         for (const sc of selectedScenarios) {
@@ -180,7 +178,7 @@ async function crearTestEnJira(scenarios, elsEsc, els, elsCred) {
                     (leng.MSG_CREATE_SCENARI_IS + "" + descriptionText);
 
                     try {
-                        // 🔹 setear tipo de test en Xray Cloud
+                        //setear tipo de test en Xray Cloud
                         var confirmacion = await xraySetTestTypeCloud({
                             token: xrayToken,
                             testKey,
@@ -206,7 +204,7 @@ async function crearTestEnJira(scenarios, elsEsc, els, elsCred) {
             }
         }
 
-        // 🔹 vincular a la historia
+        //vincular a la historia
         const createdKeys = created.map(c => c.key);
         elsEsc.status.textContent = `${leng.MSG_CREATE_LINKING} ${createdKeys.length} test(s)...`;
 
@@ -247,7 +245,7 @@ async function crearTestEnJira(scenarios, elsEsc, els, elsCred) {
 
 
 function parseGherkinScenarios(text) {
-    // normaliza: quita \r y reemplaza NBSP por espacio normal
+    //normaliza: quita \r y reemplaza NBSP por espacio normal
     const norm = (text || '').replace(/\r/g, '').replace(/\u00A0/g, ' ');
     const lines = norm.split('\n');
 
@@ -268,9 +266,9 @@ function parseGherkinScenarios(text) {
             const rawKeyword = m[1].trim();
             const rawName = m[2].trim();
 
-            // Limpia SOLO el título de comillas simples o dobles
+            //Limpia SOLO el título de comillas simples o dobles
             const cleanName = rawName.replace(/['"]/g, '');
-            // Normaliza el encabezado a dos formas canónicas
+            //Normaliza el encabezado a dos formas canónicas
             const isOutline = /outline|esquema\s+del\s+escenario/i.test(rawKeyword);
             const header = isOutline ? 'Scenario Outline' : 'Scenario';
 
@@ -287,7 +285,7 @@ function parseGherkinScenarios(text) {
     if (current)
         scenarios.push(current);
 
-    // limpia y valida que tenga cabecera o pasos
+    //limpia y valida que tenga cabecera o pasos
     const headerRe = startRe; // reutiliza el nuevo startRe
     return scenarios
         .map(s => ({ name: s.name, body: s.body.trim() }))
@@ -316,7 +314,7 @@ async function jiraCreateTestIssue({
         scenario.body.split(/\r?\n/).slice(1).join('\n');
 
     descriptionText = descriptionText.replaceAll('`', '');
-    descriptionText = descriptionText + '\n\n '+leng.MSG_CREATE_INTERNAL+' HakaBoost - Hakalab.com'
+    descriptionText = descriptionText + '\n\n ' + leng.MSG_CREATE_INTERNAL + ' HakaBoost - Hakalab.com'
 
     const { issue_type } = await chrome.storage.sync.get(['issue_type']);
     let tipoIssue = issue_type || 'Test';
@@ -415,7 +413,7 @@ async function jiraLinkIssues({ jira_base, jira_email, jira_token, inward, outwa
             path: '/rest/api/3/issueLink',
             method: 'POST',
             body: {
-                type: { name: typeLink }, // ← "Tests" u otro name real en tu instancia
+                type: { name: typeLink }, // ← "Tests" u otro name real en la instancia
                 inwardIssue: { key: outward }, // HU
                 outwardIssue: { key: inward } // Test
             }
@@ -426,7 +424,7 @@ async function jiraLinkIssues({ jira_base, jira_email, jira_token, inward, outwa
                 path: '/rest/api/3/issueLink',
                 method: 'POST',
                 body: {
-                    type: { name: "Relates" }, // ← "Tests" u otro name real en tu instancia
+                    type: { name: "Relates" }, // ← "Tests" u otro name real en la instancia
                     inwardIssue: { key: outward }, // HU
                     outwardIssue: { key: inward } // Test
                 }
@@ -465,10 +463,7 @@ export function isMasked(v) {
 }
 
 
-
-
-
-// ==== Jira REST helpers (versión robusta) ====
+// ==== Jira REST helpers ====
 function b64(str) {
     try { return btoa(str); } catch { return Buffer.from(str).toString('base64'); }
 }
@@ -654,26 +649,6 @@ async function jiraEnsureXrayTestTypeFieldId({ jira_base, jira_email, jira_token
     await chrome.storage.sync.set({ xray_test_type_field_id: field.id });
     return field.id;
 }
-
-async function jiraSetXrayTestType({ jira_base, jira_email, jira_token, issueKey, testType }) {
-    const valid = (testType === 'Manual' || testType === 'Cucumber') ? testType : 'Manual';
-    const fieldId = await jiraEnsureXrayTestTypeFieldId({ jira_base, jira_email, jira_token });
-
-    const resp = await jiraRequest({
-        jira_base, jira_email, jira_token,
-        path: `/rest/api/3/issue/${issueKey}`,
-        method: 'PUT',
-        body: { fields: { [fieldId]: valid } }
-    });
-
-    // Jira devuelve 204 en updates correctos
-    if (!resp || (resp.status !== 204 && resp.status !== 200)) {
-        throw new Error(`${leng.MSG_CREATE_ERROR_INUPDATE_TYPE_XRAY} "${valid}" ${MSG_CREATE_PARA} ${issueKey}.`);
-    }
-    return true;
-}
-
-
 
 
 // Autenticación Xray Cloud -> Bearer token

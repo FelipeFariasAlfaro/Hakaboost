@@ -1,6 +1,5 @@
 import {
-  improveDescriptionGemini, improveDescriptionOpenAI, improveDescriptionChrome,
-  waitForClickExecution, savedataIA, testOpenAIConfig
+  improveDescriptionGemini, improveDescriptionOpenAI, improveDescriptionChrome, savedataIA
 } from './js/iaworks.js';
 import { testJiraConect, chachDefaultIssue } from './js/jiraworks.js'
 import { ENDPOINTS } from './js/urls.js'
@@ -17,7 +16,6 @@ export const els = {
   refresh: document.getElementById('sp-refresh'),
   btnCopyKey: document.getElementById('copy-key'),
   btnCopyTitle: document.getElementById('copy-title'),
-  //btnOpen: document.getElementById('open-in-jira'),
   tokenInput: document.getElementById('openai-token'),
   saveTokenBtn: document.getElementById('save-token'),
   btnLoadDesc: document.getElementById('btn-load-desc'),
@@ -106,18 +104,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   //seteo del lenguaje
   await setting_leng();
-
   orden1 = leng.PROMPT_ORG;
-  
-
   await setHTMLLeng(html, leng);
 
   const { isregister } = await chrome.storage.sync.get('isregister');
 
-   elsCred.openaidata.style = 'display:none';
-   elsCred.geminidata.style = 'display:none';
+  elsCred.openaidata.style = 'display:none';
+  elsCred.geminidata.style = 'display:none';
 
-  if (!isregister || isregister === 'false') { //inicia el registro
+  //si no existe, inicia el registro
+  if (!isregister || isregister === 'false') { 
 
     Swal.fire({
       title: 'Selecciona tu idioma / Select your language',
@@ -138,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         return;
       }
-  });
+    });
 
   }
   else {
@@ -189,15 +185,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       elsCred.geminidata.style = 'display:block';
       iaselect.value = "Google Gemini";
 
-    } else if(ia_default === "openai") {
+    } else if (ia_default === "openai") {
       elsCred.openaidata.style = 'display:block';
       elsCred.geminidata.style = 'display:none';
       iaselect.value = "OpenAI";
-    }else if(ia_default === "chrome"){
+    } else if (ia_default === "chrome") {
       elsCred.openaidata.style = 'display:none';
       elsCred.geminidata.style = 'display:none';
       iaselect.value = "ChromeIA";
-    }else{
+    } else {
       await chrome.storage.sync.set({
         ia_default: 'chrome'
       });
@@ -218,7 +214,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.btndownloadfeature.addEventListener('click', descargarFeature);
     elsCred.linkedq.addEventListener('click', dudaslinkeds);
     elsCred.issueq.addEventListener('click', dudasIssues);
-
 
     //Setea los valores de credenciales de xray y jira en el front
     if (cfg.jira_base) elsCred.jiraBase.value = cfg.jira_base;
@@ -249,7 +244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       let token = elsCred.jiraToken.value.trim();
       const linked = elsCred.linked.value.trim();
 
-
       if (!base || !email || !token || !inpissuetype) {
         Swal.fire('Upss', leng.MSG_JIRA_ERROR1, 'error');
         return;
@@ -267,7 +261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       elsCred.jiraToken.value = mask(token);
 
       testJiraConect();
-
     });
 
     //Botones Eliminar Jira
@@ -292,7 +285,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let validateXray = await xrayTestData(cid, csec);
 
-
       if (validateXray) {
         await chrome.storage.sync.set({ xray_client_id: cid, xray_client_secret: csec, xray: 'true' });
         elsCred.xrayClientSecret.value = mask(csec);
@@ -300,8 +292,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         Swal.fire(leng.MSG_ERROR_SWAL, leng.MSG_XRAY_ERROR2, 'error');
       }
-
-
     });
 
     //Botones Eliminar Xray
@@ -318,7 +308,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Carga inicial
     await refreshFromActiveTab();
-
   }
 });
 
@@ -429,8 +418,6 @@ async function reemplazarDescripcion() {
 
   await refreshFromActiveTab();
   const issueT = els.issue.value.toLowerCase();
-  const statusT = els.status.value.toLowerCase();
-  const summaryT = els.summary.value.toLowerCase();
   const urlT = els.url.value.toLowerCase();
 
   if (!urlT.includes(issueT)) {
@@ -572,7 +559,7 @@ async function setPrompt() {
     });
   }
   else if (isDenied) {
-    // Cargar prompt original (puedes cambiar el string según necesites)
+    // Cargar prompt original
     const promptOriginal = orden1;
     await chrome.storage.sync.set({ promptbase: promptOriginal });
     Swal.fire({
@@ -588,10 +575,10 @@ async function changeIa() {
   if (seleccion == "Google Gemini") {
     elsCred.openaidata.style = 'display:none';
     elsCred.geminidata.style = 'display:block';
-  } else if (seleccion == "OpenAI"){
+  } else if (seleccion == "OpenAI") {
     elsCred.openaidata.style = 'display:block';
     elsCred.geminidata.style = 'display:none';
-  }else{
+  } else {
     elsCred.openaidata.style = 'display:none';
     elsCred.geminidata.style = 'display:none';
   }
@@ -606,8 +593,29 @@ async function improveDescriptionIssue() {
   else if (ia_default === 'openai') {
     console.log("Modelo OpenAI");
     await improveDescriptionOpenAI(els);
-  }else if(ia_default === 'chrome'){
-    await improveDescriptionChrome(els);
+  } else if (ia_default === 'chrome') {
+
+    const { uselocal } = await chrome.storage.sync.get('uselocal');
+
+    if (!uselocal || uselocal === 'false') {
+      await chrome.storage.sync.set({ uselocal: false });
+
+      const result = await Swal.fire({
+        title: leng.INFORMACION,
+        html: leng.MSG_FIRST_IA,
+        showCancelButton: true,
+        confirmButtonText: leng.CONTINUAR,
+        cancelButtonText: leng.CERRAR,
+        allowOutsideClick: true,
+        allowEscapeKey: true
+      });
+
+      if (result.isConfirmed) {
+        await improveDescriptionChrome(els);
+      }
+    } else {
+      await improveDescriptionChrome(els);
+    }
   }
 }
 
@@ -623,7 +631,7 @@ async function retry(fn, { tries, delay } = {}) {
     allowOutsideClick: false,
     allowEscapeKey: false,
     didOpen: () => {
-      Swal.showLoading(); // icono de loading
+      Swal.showLoading();
     }
   });
   let lastErr;
@@ -801,7 +809,6 @@ window.addEventListener('unload', async () => {
 
 
 //helper para la validación de mail
-
 export function isValidEmail(email) {
   if (typeof email !== "string") return false;
   const e = email.trim();
@@ -823,7 +830,6 @@ export function isValidEmail(email) {
 }
 
 async function descargarFeature() {
-
   const issue = els.issue.value;
   await downloadFeatureFromTextarea(issue);
 }
@@ -892,7 +898,7 @@ async function cofeeMenssage() {
     imageHeight: 128,
     imageAlt: 'Café icon',
     showCancelButton: true,
-    showConfirmButton: false,                 // activa un segundo botón
+    showConfirmButton: false,             // activa un segundo botón
     confirmButtonText: 'OK',
     cancelButtonText: leng.COFFEE_BTN,    // texto del botón extra
     width: "80%"
@@ -906,10 +912,8 @@ async function cofeeMenssage() {
 }
 
 async function validateRegister() {
-
   //seteo del lenguaje
   await setting_leng();
-
   const result = await Swal.fire({
     title: leng.Bienvenido,
     html: `
@@ -958,8 +962,6 @@ async function validateRegister() {
         Swal.showValidationMessage(leng.REGISTER_ERROR2);
         return false;
       }
-
-
       return { nombre, email, empresa };
     }
   });

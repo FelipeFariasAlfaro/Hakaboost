@@ -17,7 +17,7 @@
 - One AI provider:
   - **OpenAI** API key (recommended): enable a small, low-cost model like `gpt-4o-mini`.
   - **or** **Google Gemini** API key (e.g., `gemini-2.5-flash`).
-  - **Optional**: Chrome's local AI (Language Model API) if supported in your Chrome build.
+  - **Optional**: Chrome's local AI (Language Model API) if supported in your Chrome build and device.
 
 - (Optional) **Xray Cloud** credentials for test features (client id/secret).
 
@@ -40,9 +40,13 @@
 
 > All values are stored locally in your browser via `chrome.storage.sync`.
 
+## Usage Chrome Local IA
+- If you select to use Chrome's local AI, the add-on will start downloading automatically.
+- If the device does not have the hardware characteristics to support local AI, a message is displayed and the user is offered the use of AI from OpenAI and Gemini cloud.
+
 ## Usage
 1. Open any Jira issue page in your Jira Cloud (e.g., `/browse/PROJ-123`).
-2. Click the **Hajaboost** icon (or press `Ctrl+Shift+Y` / `Cmd+Shift+Y`) to open the side panel.
+2. Click the **Hakaboost** icon (or press `Ctrl+Shift+Y` / `Cmd+Shift+Y`) to open the side panel.
 3. Press **Load Description** to pull the current description.
 4. Press **Improve** to generate a higher‑quality description.
 5. **Replace** to push it back into Jira.

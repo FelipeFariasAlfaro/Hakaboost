@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "HakaBoost",
-  "version": "1.0.1",
+  "name": "HakaBoost - AI for Quality in Jira",
+  "version": "1.0.4",
   "description": "Accelerate your testing and quality work in Jira with HakaBoost",
   "icons": {
     "16": "img/16x16.png",
